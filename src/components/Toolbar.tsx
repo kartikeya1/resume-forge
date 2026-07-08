@@ -7,6 +7,7 @@ import { exportDocx } from '@/lib/docxExport';
 import { exportPdf } from '@/lib/pdfExport';
 import { saveSnapshot, openSnapshot, InvalidSnapshotError } from '@/lib/persistIO';
 import { SAMPLES } from '@/lib/samples';
+import type { Theme } from '@/lib/useTheme';
 
 const IMAGE_PDF_MSG =
   'The words in this PDF could not be parsed. This appears to be an image-based (scanned) PDF rather than a text PDF, and is unusable. Please upload an original PDF exported from Word, Google Docs, LaTeX, or another document editor.';
@@ -24,7 +25,9 @@ function Btn({
 }) {
   const base = 'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition disabled:opacity-50';
   const styles =
-    variant === 'solid' ? 'bg-neutral-900 text-white hover:bg-neutral-700' : 'border border-neutral-300 text-neutral-700 hover:bg-neutral-100';
+    variant === 'solid'
+      ? 'bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300'
+      : 'border border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800';
   return (
     <button type="button" onClick={onClick} disabled={disabled} className={`${base} ${styles}`}>
       {children}
@@ -49,7 +52,7 @@ function SamplesDropdown({ onPick }: { onPick: (key: string) => void }) {
         ✨ Samples <span className="text-xs text-neutral-400">▾</span>
       </Btn>
       {open && (
-        <div className="absolute left-0 top-full z-20 mt-1 w-64 overflow-hidden rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
+        <div className="absolute left-0 top-full z-20 mt-1 w-64 overflow-hidden rounded-lg border border-neutral-200 bg-white py-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
           {SAMPLES.map((s) => (
             <button
               key={s.key}
@@ -58,10 +61,10 @@ function SamplesDropdown({ onPick }: { onPick: (key: string) => void }) {
                 setOpen(false);
                 onPick(s.key);
               }}
-              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-700"
             >
               <span>{s.label}</span>
-              <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">{s.role}</span>
+              <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500 dark:bg-neutral-700 dark:text-neutral-300">{s.role}</span>
             </button>
           ))}
         </div>
@@ -70,7 +73,17 @@ function SamplesDropdown({ onPick }: { onPick: (key: string) => void }) {
   );
 }
 
-export function Toolbar({ analysisOn, onToggleAnalysis }: { analysisOn: boolean; onToggleAnalysis: () => void }) {
+export function Toolbar({
+  analysisOn,
+  onToggleAnalysis,
+  theme,
+  onToggleTheme,
+}: {
+  analysisOn: boolean;
+  onToggleAnalysis: () => void;
+  theme: Theme;
+  onToggleTheme: () => void;
+}) {
   const resume = useResumeStore((s) => s.resume);
   const jobDescription = useResumeStore((s) => s.jobDescription);
   const startFresh = useResumeStore((s) => s.startFresh);
@@ -139,33 +152,34 @@ export function Toolbar({ analysisOn, onToggleAnalysis }: { analysisOn: boolean;
   }
 
   return (
-    <div className="flex flex-col gap-2 border-b border-neutral-200 bg-white px-4 py-2.5">
+    <div className="flex flex-col gap-2 border-b border-neutral-200 bg-white px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-900">
       <div className="flex flex-wrap items-center gap-2">
         <div className="mr-1 flex items-center gap-2">
           <span className="text-lg">📄</span>
-          <span className="text-sm font-semibold tracking-tight text-neutral-900">
+          <span className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
             Resume<span className="text-neutral-400">Forge</span>
           </span>
         </div>
 
-        <div className="h-5 w-px bg-neutral-200" />
+        <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
 
         <SamplesDropdown onPick={pickSample} />
         <Btn onClick={() => guard(() => startFresh())}>＋ Start fresh</Btn>
         <Btn onClick={() => pdfRef.current?.click()}>⤒ Import PDF</Btn>
 
-        <div className="h-5 w-px bg-neutral-200" />
+        <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
 
         <Btn onClick={() => jsonRef.current?.click()}>📂 Open</Btn>
         <Btn onClick={() => saveSnapshot(resume, jobDescription)}>💾 Save</Btn>
 
         <div className="flex-1" />
 
+        <Btn onClick={onToggleTheme}>{theme === 'dark' ? '☀️ Light' : '🌙 Dark'}</Btn>
         <Btn onClick={onToggleAnalysis}>
           <span className={analysisOn ? 'text-emerald-600' : 'text-neutral-400'}>●</span> Analysis {analysisOn ? 'on' : 'off'}
         </Btn>
 
-        <div className="h-5 w-px bg-neutral-200" />
+        <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
 
         {busy && <span className="text-xs text-neutral-500">{busy}</span>}
         <Btn onClick={() => exportPdf()}>⬇ PDF</Btn>
@@ -176,9 +190,9 @@ export function Toolbar({ analysisOn, onToggleAnalysis }: { analysisOn: boolean;
       </div>
 
       {error && (
-        <div className="flex items-start justify-between gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+        <div className="flex items-start justify-between gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
           <span>{error}</span>
-          <button type="button" onClick={() => setError(null)} className="shrink-0 font-medium text-red-500 hover:text-red-700">
+          <button type="button" onClick={() => setError(null)} className="shrink-0 font-medium text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200">
             Dismiss
           </button>
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useResumeStore } from '@/lib/store';
+import { useTheme } from '@/lib/useTheme';
 import { Toolbar } from '@/components/Toolbar';
 import { Editor } from '@/components/Editor';
 import { ResumePreview } from '@/components/ResumePreview';
@@ -11,6 +12,7 @@ type MobileTab = 'edit' | 'preview' | 'insights';
 
 export default function Home() {
   const resume = useResumeStore((s) => s.resume);
+  const { theme, toggle } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<MobileTab>('preview');
   const [analysisOn, setAnalysisOn] = useState(false);
@@ -24,17 +26,24 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen flex-col">
-      <Toolbar analysisOn={analysisOn} onToggleAnalysis={() => setAnalysisOn((v) => !v)} />
+    <div className={`flex h-screen flex-col bg-neutral-100 dark:bg-neutral-950 ${theme === 'dark' ? 'dark' : ''}`}>
+      <Toolbar
+        analysisOn={analysisOn}
+        onToggleAnalysis={() => setAnalysisOn((v) => !v)}
+        theme={theme}
+        onToggleTheme={toggle}
+      />
 
       {/* Mobile tab switcher */}
-      <div className="flex border-b border-neutral-200 bg-white lg:hidden">
+      <div className="flex border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 lg:hidden">
         {(['edit', 'preview', 'insights'] as MobileTab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`flex-1 py-2 text-xs font-medium capitalize ${
-              tab === t ? 'border-b-2 border-neutral-900 text-neutral-900' : 'text-neutral-400'
+              tab === t
+                ? 'border-b-2 border-neutral-900 text-neutral-900 dark:border-neutral-100 dark:text-neutral-100'
+                : 'text-neutral-400'
             }`}
           >
             {t}
@@ -45,21 +54,25 @@ export default function Home() {
       <div className="flex min-h-0 flex-1">
         {/* Editor */}
         <aside
-          className={`min-h-0 w-full overflow-y-auto border-r border-neutral-200 bg-neutral-50 p-4 lg:block lg:w-[32%] lg:max-w-[440px] ${
+          className={`min-h-0 w-full overflow-y-auto border-r border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900 lg:block lg:w-[32%] lg:max-w-[440px] ${
             tab === 'edit' ? 'block' : 'hidden'
           }`}
         >
           <Editor />
         </aside>
 
-        {/* Preview */}
-        <main className={`min-h-0 flex-1 overflow-y-auto bg-neutral-100 p-6 lg:block ${tab === 'preview' ? 'block' : 'hidden'}`}>
+        {/* Preview — surround goes dark, the paper itself stays light */}
+        <main
+          className={`min-h-0 flex-1 overflow-y-auto bg-neutral-100 p-6 dark:bg-neutral-950 lg:block ${
+            tab === 'preview' ? 'block' : 'hidden'
+          }`}
+        >
           <ResumePreview resume={resume} analysisOn={analysisOn} />
         </main>
 
         {/* Insights */}
         <aside
-          className={`min-h-0 w-full overflow-y-auto border-l border-neutral-200 bg-neutral-50 p-4 lg:block lg:w-[30%] lg:max-w-[400px] ${
+          className={`min-h-0 w-full overflow-y-auto border-l border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900 lg:block lg:w-[30%] lg:max-w-[400px] ${
             tab === 'insights' ? 'block' : 'hidden'
           }`}
         >

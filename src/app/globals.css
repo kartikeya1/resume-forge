@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: `dark:` utilities apply inside a `.dark` container.
+   The resume paper deliberately carries no `dark:` classes, so it stays light
+   ("paper white") even while the surrounding app chrome goes dark. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f5f5f4;
   --foreground: #171717;

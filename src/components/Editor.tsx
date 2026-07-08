@@ -133,7 +133,7 @@ function ExperienceEditor() {
     <SectionCard title="Experience">
       <div className="space-y-3">
         {experience.map((e, i) => (
-          <div key={e.id} className="rounded-md border border-neutral-200 p-2.5">
+          <div key={e.id} className="rounded-md border border-neutral-200 p-2.5 dark:border-neutral-700">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-medium text-neutral-400">Role {i + 1}</span>
               <MoveRemove
@@ -173,7 +173,7 @@ function ProjectsEditor() {
     <SectionCard title="Projects" defaultOpen={false}>
       <div className="space-y-3">
         {projects.map((p, i) => (
-          <div key={p.id} className="rounded-md border border-neutral-200 p-2.5">
+          <div key={p.id} className="rounded-md border border-neutral-200 p-2.5 dark:border-neutral-700">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-medium text-neutral-400">Project {i + 1}</span>
               <MoveRemove
@@ -204,7 +204,7 @@ function SkillsEditor() {
     <SectionCard title="Skills">
       <div className="space-y-2.5">
         {skills.map((g, i) => (
-          <div key={g.id} className="rounded-md border border-neutral-200 p-2.5">
+          <div key={g.id} className="rounded-md border border-neutral-200 p-2.5 dark:border-neutral-700">
             <div className="mb-2 flex items-center gap-2">
               <div className="w-40 shrink-0">
                 <TextInput value={g.name} placeholder="Group (e.g. Tools)" onChange={(v) => update((d) => void (d.skills[i].name = v))} />
@@ -237,7 +237,7 @@ function EducationEditor() {
     <SectionCard title="Education">
       <div className="space-y-3">
         {education.map((e, i) => (
-          <div key={e.id} className="rounded-md border border-neutral-200 p-2.5">
+          <div key={e.id} className="rounded-md border border-neutral-200 p-2.5 dark:border-neutral-700">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-medium text-neutral-400">Entry {i + 1}</span>
               <MoveRemove
