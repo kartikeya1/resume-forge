@@ -2,25 +2,61 @@
 
 import type { Resume, SectionKey } from '@/lib/types';
 import { SECTION_LABELS } from '@/lib/types';
+import { checkBullet, type BulletRating } from '@/lib/analysis';
 
-function SectionHeading({ children }: { children: string }) {
+const RATING_BORDER: Record<BulletRating, string> = {
+  strong: 'border-emerald-400',
+  ok: 'border-amber-400',
+  weak: 'border-red-400',
+};
+const RATING_DOT: Record<BulletRating, string> = {
+  strong: 'bg-emerald-500',
+  ok: 'bg-amber-500',
+  weak: 'bg-red-500',
+};
+
+function SectionHeading({ children, dot }: { children: string; dot?: BulletRating }) {
   return (
-    <h2 className="mt-4 mb-1.5 border-b border-black pb-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-black first:mt-0">
+    <h2 className="mt-4 mb-1.5 flex items-center gap-1.5 border-b border-black pb-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-black first:mt-0">
+      {dot && <span className={`rf-anno inline-block h-1.5 w-1.5 rounded-full ${RATING_DOT[dot]}`} />}
       {children}
     </h2>
   );
 }
 
-function Bullets({ items }: { items: string[] }) {
+function Bullets({ items, analysisOn }: { items: string[]; analysisOn: boolean }) {
   const clean = items.filter((b) => b.trim());
   if (!clean.length) return null;
   return (
     <ul className="ml-4 list-disc space-y-0.5 text-[12.5px] leading-snug marker:text-black">
-      {clean.map((b, i) => (
-        <li key={i}>{b}</li>
-      ))}
+      {clean.map((b, i) => {
+        const rating = analysisOn ? checkBullet(b).rating : null;
+        return (
+          <li
+            key={i}
+            className={rating ? `rf-anno -ml-1 list-none border-l-2 pl-2 ${RATING_BORDER[rating]}` : ''}
+          >
+            {rating && <span className="mr-1 text-neutral-400">•</span>}
+            {b}
+          </li>
+        );
+      })}
     </ul>
   );
+}
+
+// Aggregate rating for a section's bullets: red if any weak, amber if any ok.
+function aggregate(bulletGroups: string[][]): BulletRating {
+  let seenOk = false;
+  for (const group of bulletGroups) {
+    for (const b of group) {
+      if (!b.trim()) continue;
+      const r = checkBullet(b).rating;
+      if (r === 'weak') return 'weak';
+      if (r === 'ok') seenOk = true;
+    }
+  }
+  return seenOk ? 'ok' : 'strong';
 }
 
 function DateRange({ start, end }: { start: string; end: string }) {
@@ -29,7 +65,7 @@ function DateRange({ start, end }: { start: string; end: string }) {
   return <span className="shrink-0 text-[11.5px] text-neutral-600">{t}</span>;
 }
 
-function renderSection(resume: Resume, key: SectionKey) {
+function renderSection(resume: Resume, key: SectionKey, analysisOn: boolean) {
   switch (key) {
     case 'summary':
       if (!resume.summary.trim()) return null;
@@ -43,7 +79,9 @@ function renderSection(resume: Resume, key: SectionKey) {
       if (!resume.experience.length) return null;
       return (
         <section key={key}>
-          <SectionHeading>{SECTION_LABELS.experience}</SectionHeading>
+          <SectionHeading dot={analysisOn ? aggregate(resume.experience.map((e) => e.bullets)) : undefined}>
+            {SECTION_LABELS.experience}
+          </SectionHeading>
           <div className="space-y-2">
             {resume.experience.map((e) => (
               <div key={e.id}>
@@ -55,7 +93,7 @@ function renderSection(resume: Resume, key: SectionKey) {
                   <DateRange start={e.start} end={e.end} />
                 </div>
                 {e.location ? <div className="text-[11.5px] italic text-neutral-600">{e.location}</div> : null}
-                <Bullets items={e.bullets} />
+                <Bullets items={e.bullets} analysisOn={analysisOn} />
               </div>
             ))}
           </div>
@@ -65,7 +103,9 @@ function renderSection(resume: Resume, key: SectionKey) {
       if (!resume.projects.length) return null;
       return (
         <section key={key}>
-          <SectionHeading>{SECTION_LABELS.projects}</SectionHeading>
+          <SectionHeading dot={analysisOn ? aggregate(resume.projects.map((p) => p.bullets)) : undefined}>
+            {SECTION_LABELS.projects}
+          </SectionHeading>
           <div className="space-y-2">
             {resume.projects.map((p) => (
               <div key={p.id}>
@@ -74,7 +114,7 @@ function renderSection(resume: Resume, key: SectionKey) {
                   <DateRange start={p.start} end={p.end} />
                 </div>
                 {p.link ? <div className="text-[11.5px] italic text-neutral-600">{p.link}</div> : null}
-                <Bullets items={p.bullets} />
+                <Bullets items={p.bullets} analysisOn={analysisOn} />
               </div>
             ))}
           </div>
@@ -136,10 +176,10 @@ function renderSection(resume: Resume, key: SectionKey) {
   }
 }
 
-export function ResumePreview({ resume }: { resume: Resume }) {
+export function ResumePreview({ resume, analysisOn = false }: { resume: Resume; analysisOn?: boolean }) {
   const c = resume.contact;
   const contactBits = [c.location, c.phone, c.email].filter(Boolean);
-  const sections = resume.sectionOrder.map((k) => renderSection(resume, k)).filter(Boolean);
+  const sections = resume.sectionOrder.map((k) => renderSection(resume, k, analysisOn)).filter(Boolean);
 
   return (
     <div
@@ -147,7 +187,6 @@ export function ResumePreview({ resume }: { resume: Resume }) {
       className="mx-auto w-full max-w-[720px] bg-white px-12 py-10 text-black shadow-sm ring-1 ring-black/5"
       style={{ fontFamily: 'Arial, Helvetica, system-ui, sans-serif' }}
     >
-      {/* Header */}
       <header className="mb-2 text-center">
         <h1 className="text-[26px] font-bold leading-tight tracking-tight text-black">{c.name || 'Your Name'}</h1>
         {c.title ? <div className="mt-0.5 text-[13px] text-neutral-700">{c.title}</div> : null}
@@ -168,9 +207,7 @@ export function ResumePreview({ resume }: { resume: Resume }) {
       {sections.length ? (
         <div className="space-y-1">{sections}</div>
       ) : (
-        <p className="mt-10 text-center text-sm text-neutral-400">
-          Your resume preview will appear here as you type.
-        </p>
+        <p className="mt-10 text-center text-sm text-neutral-400">Your resume preview will appear here as you type.</p>
       )}
     </div>
   );

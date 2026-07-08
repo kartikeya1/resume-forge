@@ -13,11 +13,13 @@ interface ResumeState {
   startFresh: () => void;
   loadSample: () => void;
   importResume: (resume: Resume) => void;
+  loadSnapshot: (resume: Resume, jobDescription: string) => void;
+  isEmpty: () => boolean;
 }
 
 export const useResumeStore = create<ResumeState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       resume: sampleResume(),
       jobDescription: '',
       hasContent: false,
@@ -31,6 +33,18 @@ export const useResumeStore = create<ResumeState>()(
       startFresh: () => set({ resume: emptyResume(), hasContent: true }),
       loadSample: () => set({ resume: sampleResume(), hasContent: true }),
       importResume: (resume) => set({ resume, hasContent: true }),
+      loadSnapshot: (resume, jobDescription) => set({ resume, jobDescription, hasContent: true }),
+      isEmpty: () => {
+        const r = get().resume;
+        return (
+          !r.contact.name.trim() &&
+          !r.summary.trim() &&
+          r.experience.length === 0 &&
+          r.projects.length === 0 &&
+          !r.skills.some((s) => s.items.length) &&
+          r.education.length === 0
+        );
+      },
     }),
     {
       name: 'resume-forge:v1',

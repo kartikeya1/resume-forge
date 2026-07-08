@@ -13,6 +13,7 @@ export default function Home() {
   const resume = useResumeStore((s) => s.resume);
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<MobileTab>('preview');
+  const [analysisOn, setAnalysisOn] = useState(false);
 
   // Guard against SSR/persist hydration mismatch: the store rehydrates from
   // localStorage on the client, so we render only after mount.
@@ -24,7 +25,7 @@ export default function Home() {
 
   return (
     <div className="flex h-screen flex-col">
-      <Toolbar />
+      <Toolbar analysisOn={analysisOn} onToggleAnalysis={() => setAnalysisOn((v) => !v)} />
 
       {/* Mobile tab switcher */}
       <div className="flex border-b border-neutral-200 bg-white lg:hidden">
@@ -53,7 +54,7 @@ export default function Home() {
 
         {/* Preview */}
         <main className={`min-h-0 flex-1 overflow-y-auto bg-neutral-100 p-6 lg:block ${tab === 'preview' ? 'block' : 'hidden'}`}>
-          <ResumePreview resume={resume} />
+          <ResumePreview resume={resume} analysisOn={analysisOn} />
         </main>
 
         {/* Insights */}

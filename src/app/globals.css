@@ -36,4 +36,12 @@ body {
   #resume-paper {
     --tw-ring-shadow: 0 0 #0000 !important;
   }
+  /* Strip the analysis heatmap overlay from exports — resume stays clean B&W. */
+  #resume-paper .rf-anno {
+    border-color: transparent !important;
+    background: transparent !important;
+  }
+  #resume-paper span.rf-anno {
+    display: none !important;
+  }
 }
