@@ -3,6 +3,7 @@
 import type { Resume, SectionKey } from '@/lib/types';
 import { SECTION_LABELS } from '@/lib/types';
 import { checkBullet, type BulletRating } from '@/lib/analysis';
+import { Inline } from './InlineText';
 
 const RATING_BORDER: Record<BulletRating, string> = {
   strong: 'border-emerald-400',
@@ -37,7 +38,7 @@ function Bullets({ items, analysisOn }: { items: string[]; analysisOn: boolean }
             className={rating ? `rf-anno -ml-1 list-none border-l-2 pl-2 ${RATING_BORDER[rating]}` : ''}
           >
             {rating && <span className="mr-1 text-neutral-400">•</span>}
-            {b}
+            <Inline text={b} />
           </li>
         );
       })}
@@ -72,7 +73,7 @@ function renderSection(resume: Resume, key: SectionKey, analysisOn: boolean) {
       return (
         <section key={key}>
           <SectionHeading>{SECTION_LABELS.summary}</SectionHeading>
-          <p className="text-[12.5px] leading-snug text-black">{resume.summary}</p>
+          <p className="text-[12.5px] leading-snug text-black"><Inline text={resume.summary} /></p>
         </section>
       );
     case 'experience':
@@ -131,7 +132,12 @@ function renderSection(resume: Resume, key: SectionKey, analysisOn: boolean) {
               .map((g) => (
                 <p key={g.id} className="text-[12.5px] leading-snug text-black">
                   {g.name ? <span className="font-semibold">{g.name}: </span> : null}
-                  {g.items.join(', ')}
+                  {g.items.map((it, i) => (
+                    <span key={i}>
+                      {i > 0 ? ', ' : ''}
+                      <Inline text={it} />
+                    </span>
+                  ))}
                 </p>
               ))}
           </div>
@@ -150,7 +156,7 @@ function renderSection(resume: Resume, key: SectionKey, analysisOn: boolean) {
                   <DateRange start={e.start} end={e.end} />
                 </div>
                 {(e.degree || e.details) && (
-                  <div className="text-[11.5px] italic text-neutral-600">{[e.degree, e.details].filter(Boolean).join(' · ')}</div>
+                  <div className="text-[11.5px] italic text-neutral-600"><Inline text={[e.degree, e.details].filter(Boolean).join(' · ')} /></div>
                 )}
               </div>
             ))}
@@ -165,7 +171,7 @@ function renderSection(resume: Resume, key: SectionKey, analysisOn: boolean) {
           <div className="space-y-0.5">
             {resume.certifications.map((c) => (
               <p key={c.id} className="text-[12.5px] leading-snug text-black">
-                {[c.name, c.issuer, c.date].filter(Boolean).join(' · ')}
+                <Inline text={[c.name, c.issuer, c.date].filter(Boolean).join(' · ')} />
               </p>
             ))}
           </div>

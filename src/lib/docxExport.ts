@@ -14,6 +14,14 @@ import {
 } from 'docx';
 import type { Resume, SectionKey } from './types';
 import { SECTION_LABELS } from './types';
+import { parseInline } from './inlineFormat';
+
+// Convert *bold* markup into docx TextRuns preserving bold segments.
+function inlineRuns(text: string, opts: { size?: number; italics?: boolean; color?: string } = {}): TextRun[] {
+  return parseInline(text).map(
+    (seg) => new TextRun({ text: seg.text, bold: seg.bold, size: opts.size, italics: opts.italics, color: opts.color })
+  );
+}
 
 function heading(text: string): Paragraph {
   return new Paragraph({
@@ -27,7 +35,7 @@ function bullet(text: string): Paragraph {
   return new Paragraph({
     bullet: { level: 0 },
     spacing: { after: 40 },
-    children: [new TextRun({ text, size: 20 })],
+    children: inlineRuns(text, { size: 20 }),
   });
 }
 
@@ -56,7 +64,7 @@ function sectionParagraphs(resume: Resume, key: SectionKey): Paragraph[] {
     case 'summary':
       if (resume.summary.trim()) {
         out.push(heading(SECTION_LABELS.summary));
-        out.push(new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: resume.summary, size: 20 })] }));
+        out.push(new Paragraph({ spacing: { after: 40 }, children: inlineRuns(resume.summary, { size: 20 }) }));
       }
       break;
     case 'experience':
@@ -89,7 +97,7 @@ function sectionParagraphs(resume: Resume, key: SectionKey): Paragraph[] {
               spacing: { after: 40 },
               children: [
                 new TextRun({ text: g.name ? `${g.name}: ` : '', bold: true, size: 20 }),
-                new TextRun({ text: g.items.join(', '), size: 20 }),
+                ...inlineRuns(g.items.join(', '), { size: 20 }),
               ],
             })
           );
@@ -109,7 +117,7 @@ function sectionParagraphs(resume: Resume, key: SectionKey): Paragraph[] {
       if (resume.certifications.length) {
         out.push(heading(SECTION_LABELS.certifications));
         for (const c of resume.certifications) {
-          out.push(new Paragraph({ spacing: { after: 30 }, children: [new TextRun({ text: [c.name, c.issuer, c.date].filter(Boolean).join(' · '), size: 20 })] }));
+          out.push(new Paragraph({ spacing: { after: 30 }, children: inlineRuns([c.name, c.issuer, c.date].filter(Boolean).join(' · '), { size: 20 }) }));
         }
       }
       break;

@@ -7,6 +7,9 @@ import { Label, TextInput, AutoTextarea, IconBtn, AddButton, SectionCard } from 
 export function Editor() {
   return (
     <div className="space-y-3">
+      <p className="px-1 text-[11px] text-neutral-400 dark:text-neutral-500">
+        Tip: wrap text in *asterisks* to make it <strong className="text-neutral-500 dark:text-neutral-400">bold</strong> on the resume.
+      </p>
       <ContactEditor />
       <SummaryEditor />
       <ExperienceEditor />

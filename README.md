@@ -15,8 +15,15 @@ A web-based resume builder with a **live pageless preview**, a deterministic **A
 **Editing & content**
 - **Start fresh**, **import a PDF**, load a **role sample** (APM, PM, SPM, Marketing MBA, Sales MBA, Sr. Sales Manager), or **Open** a previously saved file.
 - Structured section editor (contact, summary, experience, projects, skills, education, certifications) with add / remove / reorder.
+- **Inline bold formatting** — wrap text in `*asterisks*` (WhatsApp-style) and it renders bold in the preview and in both PDF and DOCX exports.
 - **Live pageless preview** — a black & white, single continuous "paper" that updates as you type.
 - **Dark mode** toggle — the whole app goes dark while the resume paper stays white for true-to-print visualization.
+
+**Resume library, versions & applications (all local — no account)**
+- Maintain **multiple named resumes** in one place; switch, create, **duplicate**, rename, and delete.
+- Mark one as your **Master** and spin up tailored copies with **"New from Master."**
+- **Version history** per resume: save snapshots, **restore** any of them, and **diff** a snapshot against the current draft (added / removed content).
+- Tag each resume with an **application status** (Draft / Applied / Interview / Offer / Rejected) — a lightweight application tracker.
 
 **Import**
 - Text PDFs are parsed with pdf.js and heuristically split into structured sections.
@@ -44,7 +51,9 @@ A web-based resume builder with a **live pageless preview**, a deterministic **A
 Everything derives from one typed JSON object ([`src/lib/types.ts`](./src/lib/types.ts)) — contact, summary, experience[], education[], skills[], projects[], certifications[], a `sectionOrder`, and `meta`. We deliberately use a **structured model rather than free rich text**, because clean structured data is what makes reliable scoring, keyword matching, and faithful export possible.
 
 ### State & persistence
-Global state lives in a **Zustand** store ([`src/lib/store.ts`](./src/lib/store.ts)) that holds the `resume` and `jobDescription`. The `persist` middleware autosaves to `localStorage` (`resume-forge:v1`). All edits go through a single `update(recipe)` action that structurally clones the resume, so React re-renders predictably.
+Global state lives in a **Zustand** store ([`src/lib/store.ts`](./src/lib/store.ts)). It holds a **library** of documents (each with its own resume, job description, application status, master flag, and version history) plus the live working copy of the active document. The `persist` middleware autosaves the whole library to `localStorage` (`resume-forge:v1`, with a versioned migration from the earlier single-document shape). All edits go through a single `update(recipe)` action that structurally clones the active resume, so React re-renders predictably.
+
+**Bold formatting** is handled by a tiny shared parser ([`inlineFormat.ts`](./src/lib/inlineFormat.ts)): `*asterisks*` → bold segments, consumed by both the React preview (`<Inline>`) and the DOCX exporter (bold `TextRun`s). **Version diffs** are a deterministic content-level comparison ([`diff.ts`](./src/lib/diff.ts)).
 
 ### The edit → preview → score loop
 1. The **Editor** (left) writes into the store.
@@ -94,17 +103,22 @@ resume-forge/
 │   │   ├── page.tsx            # 3-pane shell (editor · preview · insights), theme + analysis toggles
 │   │   └── globals.css         # Tailwind, dark variant, print styles
 │   ├── components/
-│   │   ├── Toolbar.tsx         # New / Import / Samples / Open / Save / theme / analysis / export
+│   │   ├── Toolbar.tsx         # Resumes / Versions / Samples / New / Import / Open / Save / theme / analysis / export
+│   │   ├── DocsMenu.tsx        # Resume library dropdown (switch/new/duplicate/rename/delete/status/master)
+│   │   ├── VersionsMenu.tsx    # Version snapshots dropdown (save/restore/diff)
 │   │   ├── Editor.tsx          # Left pane — all section editors
 │   │   ├── ResumePreview.tsx   # Centre pane — pageless paper + analysis heatmap
 │   │   ├── InsightsPanel.tsx   # Right pane — scores, dashboard, issues, analytics, JD, actionables
-│   │   └── ui.tsx              # Shared inputs, buttons, collapsible card primitives
+│   │   ├── InlineText.tsx      # Renders *bold* markup as <strong>
+│   │   └── ui.tsx              # Shared inputs, buttons, collapsible card + Menu primitives
 │   └── lib/
 │       ├── types.ts            # The Resume schema (single source of truth)
-│       ├── store.ts            # Zustand store + localStorage persistence
+│       ├── store.ts            # Zustand store: resume library, versions, status + localStorage persistence
 │       ├── keywords.ts         # JD keyword extraction, tiering, synonym matching
 │       ├── scoring.ts          # ATS + JD-match scores, health breakdown, actionables
 │       ├── analysis.ts         # Pass 2: bullet ratings, writing issues, analytics, structure
+│       ├── inlineFormat.ts     # *bold* parser (shared by preview + DOCX)
+│       ├── diff.ts             # Content-level version diff
 │       ├── pdfImport.ts        # pdf.js text extraction + scanned detection + heuristic parse
 │       ├── docxExport.ts       # DOCX generation
 │       ├── pdfExport.ts        # Print-to-PDF (single seamless page)

@@ -130,3 +130,47 @@ export function SectionCard({
     </div>
   );
 }
+
+// Reusable dropdown menu with outside-click close. `children` is a render prop
+// receiving a `close` callback so items can dismiss the menu when clicked.
+export function Menu({
+  label,
+  width = 'w-72',
+  align = 'left',
+  children,
+}: {
+  label: React.ReactNode;
+  width?: string;
+  align?: 'left' | 'right';
+  children: (close: () => void) => React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex max-w-[220px] items-center gap-1.5 rounded-md border border-neutral-300 px-2.5 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+      >
+        <span className="truncate">{label}</span>
+        <span className="text-xs text-neutral-400">▾</span>
+      </button>
+      {open && (
+        <div
+          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full z-30 mt-1 ${width} rounded-lg border border-neutral-200 bg-white p-1 shadow-lg dark:border-neutral-700 dark:bg-neutral-800`}
+        >
+          {children(() => setOpen(false))}
+        </div>
+      )}
+    </div>
+  );
+}

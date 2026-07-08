@@ -8,6 +8,8 @@ import { exportPdf } from '@/lib/pdfExport';
 import { saveSnapshot, openSnapshot, InvalidSnapshotError } from '@/lib/persistIO';
 import { SAMPLES } from '@/lib/samples';
 import type { Theme } from '@/lib/useTheme';
+import { DocsMenu } from './DocsMenu';
+import { VersionsMenu } from './VersionsMenu';
 
 const IMAGE_PDF_MSG =
   'The words in this PDF could not be parsed. This appears to be an image-based (scanned) PDF rather than a text PDF, and is unusable. Please upload an original PDF exported from Word, Google Docs, LaTeX, or another document editor.';
@@ -160,6 +162,11 @@ export function Toolbar({
             Resume<span className="text-neutral-400">Forge</span>
           </span>
         </div>
+
+        <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
+
+        <DocsMenu />
+        <VersionsMenu />
 
         <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
 

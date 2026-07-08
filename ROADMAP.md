@@ -49,25 +49,36 @@ A simplified, resume-only editor (think "Google Docs for resumes") with a live p
 - ✅ **Save / Open**: portable, versioned `.resume.json` snapshots (resume + JD) with validation and graceful rejection of foreign files.
 - ✅ **Sample resumes dropdown**: 6 role-specific starters (APM, PM, SPM, Marketing MBA, Sales MBA, Sr. Sales Manager), with a confirm guard before replacing current work.
 - ✅ **Dark mode**: persisted toggle; all app chrome darkens while the resume paper stays white.
+- ✅ **Inline bold formatting**: WhatsApp-style `*asterisks*` render bold in the preview and in both PDF and DOCX exports.
+
+### Pass 3-lite — local library & versioning (no backend)
+The parts of the master-resume differentiator that work entirely client-side, delivered without a database or accounts.
+- ✅ **Resume library**: maintain multiple named resumes; switch / create / duplicate / rename / delete.
+- ✅ **Master resume + "New from Master"**: mark one resume as the source and spin up tailored copies from it.
+- ✅ **Version history**: per-resume snapshots with restore, plus a deterministic **diff** (added / removed content) against the current draft.
+- ✅ **Application status** per resume (Draft / Applied / Interview / Offer / Rejected) — a lightweight application tracker.
+- ⚠️ Everything is stored in the browser (`localStorage`) — single-device and clearable; the `.resume.json` Save file is the backup. Cloud durability, sync, and login remain a Pass 3 (backend) concern.
 
 ---
 
 ## 🔜 Planned
 
-### Pass 3 — Persistence, accounts & the master-resume differentiator 💭
-The headline long-term feature. Requires the deferred backend, so it needs infra decisions before starting.
+### Pass 3 — remaining local features (still no backend) 🔜
+More of the master-resume workflow that can ship client-side, building on the Pass 3-lite foundation above.
+
+- 🔜 **Skill / Project / Bullet banks** — reusable content saved once and inserted into any resume.
+- 🔜 **One-click role variants** (PM / SWE / MBA / Sales / Consulting) generated from the master.
+- 🔜 **Smart templates** (the ~6 role layout templates) + **Recruiter Mode** (read-only preview).
+- 🔜 **Live master propagation** — editing a bullet/metric on the master updates linked copies (vs. today's copy-at-creation).
+
+### Pass 3 — cloud (needs backend) 💭
+The parts that genuinely require infrastructure. Needs decisions before starting.
 
 - 💭 **Decisions needed first:** auth provider (Clerk vs. Auth.js) and Postgres host (Neon / Supabase / Vercel Postgres). These add hosting, secrets, and cost.
-- 🔜 **Auth** + **Postgres + Prisma**; migrate `localStorage` data → cloud.
-- 🔜 **Master Resume profile**: every experience, project, bullet, skill, and certification in one place.
-- 🔜 **Job-specific versions linked to the master** — editing a bullet/metric once propagates everywhere.
-- 🔜 **Version history (git-like) + Resume Diff** (added / removed / changed).
-- 🔜 **JD Library + application tracker** (Applied / Interview / Rejected), each linked to a resume version.
-- 🔜 **Skill / Project / Bullet banks** — reusable content dragged into any resume.
-- 🔜 **One-click role variants** (PM / SWE / MBA / Sales / Consulting) generated from the master.
-- 🔜 **Smart templates** (the ~6 role templates) + **Recruiter Mode** (read-only preview).
+- 🔜 **Auth** + **Postgres + Prisma**; migrate the local library → cloud so it's durable and multi-device.
+- 🔜 **Cloud sync + shareable links** for resumes/versions.
 
-> Note: this pass changes the app from a zero-build static site to one with serverless functions + a database. That's why it lives in its own repo/Vercel project separate from the static portfolio.
+> Note: the cloud pass changes the app from a zero-build static site to one with serverless functions + a database.
 
 ### Pass 4 — AI layer 💭
 Everything that genuinely needs generation or judgment. Requires an LLM API key (provider TBD — Anthropic/OpenAI).
