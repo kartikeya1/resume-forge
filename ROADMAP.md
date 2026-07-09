@@ -50,6 +50,8 @@ A simplified, resume-only editor (think "Google Docs for resumes") with a live p
 - ✅ **Sample resumes dropdown**: 6 role-specific starters (APM, PM, SPM, Marketing MBA, Sales MBA, Sr. Sales Manager), with a confirm guard before replacing current work.
 - ✅ **Dark mode**: persisted toggle; all app chrome darkens while the resume paper stays white.
 - ✅ **Inline bold formatting**: WhatsApp-style `*asterisks*` render bold in the preview and in both PDF and DOCX exports.
+- ✅ **Top-bar redesign**: crowded button row consolidated into grouped **File** and **Export** menus, with the Resumes and Versions menus kept prominent and compact analysis/theme toggles on the right.
+- ✅ **Brand logo / favicon**: a turned-page mark used in the header and as the app icon (so Vercel shows a logo in the project listing); also saved as `logo.svg` at the repo root.
 
 ### Pass 3-lite — local library & versioning (no backend)
 The parts of the master-resume differentiator that work entirely client-side, delivered without a database or accounts.

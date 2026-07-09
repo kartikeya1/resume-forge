@@ -1,4 +1,6 @@
-# 📄 ResumeForge
+<p align="center"><img src="./logo.svg" width="72" alt="ResumeForge logo" /></p>
+
+# ResumeForge
 
 A web-based resume builder with a **live pageless preview**, a deterministic **ATS score**, and **job-description keyword matching** — built to help software engineering, product management, and MBA (sales/marketing) candidates tailor a clean, ATS-friendly resume.
 
@@ -103,7 +105,7 @@ resume-forge/
 │   │   ├── page.tsx            # 3-pane shell (editor · preview · insights), theme + analysis toggles
 │   │   └── globals.css         # Tailwind, dark variant, print styles
 │   ├── components/
-│   │   ├── Toolbar.tsx         # Resumes / Versions / Samples / New / Import / Open / Save / theme / analysis / export
+│   │   ├── Toolbar.tsx         # Brand + Resumes / Versions menus; grouped File & Export menus; analysis + theme toggles
 │   │   ├── DocsMenu.tsx        # Resume library dropdown (switch/new/duplicate/rename/delete/status/master)
 │   │   ├── VersionsMenu.tsx    # Version snapshots dropdown (save/restore/diff)
 │   │   ├── Editor.tsx          # Left pane — all section editors
