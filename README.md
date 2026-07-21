@@ -6,7 +6,7 @@ A web-based resume builder with a **live pageless preview**, a deterministic **A
 
 **Everything runs in your browser.** No account, no backend, no data leaves your machine — your work autosaves to `localStorage`, and you can export a portable save file whenever you like.
 
-🔗 **Live:** https://resume-forge-kartikeya-thapliyals-projects.vercel.app
+🔗 **Live:** https://resume-forge-two-pi.vercel.app
 
 > Looking for what's built vs. what's planned? See **[ROADMAP.md](./ROADMAP.md)**.
 
