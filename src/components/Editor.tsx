@@ -28,24 +28,19 @@ function ContactEditor() {
     <SectionCard title="Contact">
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2">
-          <Label>Full name</Label>
-          <TextInput value={contact.name} placeholder="Jane Doe" onChange={(v) => update((d) => void (d.contact.name = v))} />
+          <TextInput label="Full name" value={contact.name} placeholder="Jane Doe" onChange={(v) => update((d) => void (d.contact.name = v))} />
         </div>
         <div className="col-span-2">
-          <Label>Headline / target title</Label>
-          <TextInput value={contact.title} placeholder="Product Manager" onChange={(v) => update((d) => void (d.contact.title = v))} />
+          <TextInput label="Headline / target title" value={contact.title} placeholder="Product Manager" onChange={(v) => update((d) => void (d.contact.title = v))} />
         </div>
         <div>
-          <Label>Email</Label>
-          <TextInput value={contact.email} placeholder="jane@email.com" onChange={(v) => update((d) => void (d.contact.email = v))} />
+          <TextInput label="Email" value={contact.email} placeholder="jane@email.com" onChange={(v) => update((d) => void (d.contact.email = v))} />
         </div>
         <div>
-          <Label>Phone</Label>
-          <TextInput value={contact.phone} placeholder="+1 555 000 0000" onChange={(v) => update((d) => void (d.contact.phone = v))} />
+          <TextInput label="Phone" value={contact.phone} placeholder="+1 555 000 0000" onChange={(v) => update((d) => void (d.contact.phone = v))} />
         </div>
         <div className="col-span-2">
-          <Label>Location</Label>
-          <TextInput value={contact.location} placeholder="City, Country" onChange={(v) => update((d) => void (d.contact.location = v))} />
+          <TextInput label="Location" value={contact.location} placeholder="City, Country" onChange={(v) => update((d) => void (d.contact.location = v))} />
         </div>
       </div>
 

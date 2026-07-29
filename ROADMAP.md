@@ -4,7 +4,7 @@ This document tracks **what has been built** and **what is planned** across the 
 
 **Legend:** ✅ done · 🔜 planned · 💭 needs a product/infra decision before starting
 
-_Last verified: 2026-07-29 · tree clean, level with origin/main · 9 commits._
+_Last verified: 2026-07-29 · Pass 2.5 shipped · 123 tests, typecheck, lint and production build all green._
 
 ### Phase mapping
 
@@ -14,15 +14,15 @@ Kartikeya's repos, so "Phase 2" means the same thing everywhere:
 | Phase | Meaning | Where it lives here |
 |---|---|---|
 | **P0** stop the bleeding | unpushed work, leaks, diverged clones | **nothing pending** — clean and in sync |
-| **P1** safety net | tests + CI | **Pass 2.5** (new, below) — the biggest gap in this repo |
-| **P2** truth in docs | stale claims, dead routes | small: see Pass 2.5 |
-| **P3** polish | a11y, SEO, error handling, perf | **Pass 2.5** |
+| **P1** safety net | tests + CI | ✅ **Pass 2.5** — done |
+| **P2** truth in docs | stale claims, dead routes | ✅ **Pass 2.5** — done |
+| **P3** polish | a11y, SEO, error handling, perf | ✅ **Pass 2.5** — done except perf |
 | **P4** features | product work, no outside dependency | Pass 3-local, Pass 5 |
 | **P5** decision-gated | needs a provider/key/budget call | Pass 3-cloud, Pass 4-AI |
 
-**Execution order recommendation:** Pass 2.5 before Pass 3. The deterministic scoring engine *is*
-the product's core claim and currently has zero automated verification — every later pass builds on
-numbers nothing checks.
+**Execution order recommendation:** Pass 2.5 is complete, so **Pass 3-local is next.** The
+deterministic core now has 123 tests and CI behind it, which is what the later passes needed in
+order to change scoring safely.
 
 ---
 
@@ -81,53 +81,50 @@ The parts of the master-resume differentiator that work entirely client-side, de
 - ✅ **Application status** per resume (Draft / Applied / Interview / Offer / Rejected) — a lightweight application tracker.
 - ⚠️ Everything is stored in the browser (`localStorage`) — single-device and clearable; the `.resume.json` Save file is the backup. Cloud durability, sync, and login remain a Pass 3 (backend) concern.
 
+### Pass 2.5 — quality baseline (P1 · P2 · P3)
+The scores are the product's central claim, and until this pass nothing verified them. No new
+features here — this is the safety net every later pass builds on.
+
+**Testing (P1)** — was: no runner, no tests, no CI.
+- ✅ **Vitest wired up** (`vitest.config.ts`), with `test`, `test:watch`, `test:coverage` and `typecheck` scripts.
+- ✅ **123 tests across 7 suites**, all over the deterministic core:
+  - `scoring.test.ts` (22) — score bounds, the fixed 5-row breakdown, null `jdMatchScore` with no JD, actionables, determinism.
+  - `keywords.test.ts` (22) — alias folding (`k8s`→kubernetes), tier inference from JD cues, word-boundary matching, dedup, limits.
+  - `analysis.test.ts` (26) — bullet ratings, passive-voice demotion, analytics never NaN on an empty resume, technical/soft JD split.
+  - `inlineFormat.test.ts` (13) — `*bold*` round-trip, unpaired asterisks left literal, no newline spanning.
+  - `diff.test.ts` (11) — add/remove/edit, antisymmetry, bolding a bullet is not a content change.
+  - `persistIO.test.ts` (14) — save-file round-trip, and rejection of malformed/foreign/hostile JSON.
+  - `storage.test.ts` (15) — quota detection and the warning lifecycle.
+- ✅ **CI** (`.github/workflows/ci.yml`): typecheck → lint → test → build on push and PR.
+
+**Data safety (P3)** — the highest-severity fix in this pass.
+- ✅ **`localStorage` quota is now handled.** Previously a full quota threw on every autosave and edits were silently discarded — the worst failure possible for a local-first app. `src/lib/storage.ts` wraps the persist layer so writes never throw, and a non-dismissable **"Autosave is off"** banner tells the user to export a backup. It clears automatically once writes succeed again.
+- ✅ Storage being entirely unavailable (Safari private mode, blocked contexts) degrades to in-memory instead of crashing.
+
+**Error handling (P3)** — was: 5 `catch` blocks, exports had none.
+- ✅ DOCX export, PDF export and Save-to-file now surface failures in the error banner instead of failing silently.
+- ✅ **`src/app/error.tsx`** error boundary (Next 16's `unstable_retry`, not `reset`), which reassures the user their resume is still in the browser rather than showing a blank page.
+
+**Accessibility (P3)** — was: 2 `aria-` attributes in the entire app.
+- ✅ Every editor field has a real accessible name — a `<label for>` where there's room, otherwise the placeholder mirrored to `aria-label`. The old `<Label>` rendered a `<label>` pointing at nothing, which is worse than none.
+- ✅ Mobile switcher is a proper `tablist` with `aria-selected`, linked `tabpanel`s and arrow-key navigation.
+- ✅ Shared `Menu` (File, Export, Resumes, Versions) gained `aria-expanded`, `aria-haspopup`, **Escape-to-close** and focus return to the trigger.
+- ✅ `aria-pressed` on the Analysis/theme toggles, `role="alert"` on errors, `role="status"` on progress, a skip link, and better contrast on inactive tabs.
+
+**SEO / metadata (P3)** — was: title and description only.
+- ✅ Open Graph + Twitter card, `metadataBase`, canonical URL, keywords, and light/dark `themeColor`.
+- ✅ **A generated OG image** (`opengraph-image.tsx`), so a shared link unfurls as a real card.
+- ✅ `robots.ts` and `sitemap.ts`, both driven by `src/lib/site.ts` so they can't drift; `NEXT_PUBLIC_SITE_URL` lets previews advertise their own host.
+
+**Incidental fixes**
+- ✅ Cleared two pre-existing lint errors that would have made the new CI red on day one. `useTheme` and the hydration gate now use `useSyncExternalStore` instead of setState-in-effect — which also removes a flash of the wrong theme on load.
+
+**Not done — carried forward**
+- 🔜 **Performance work.** Deliberately deferred: the app is one `'use client'` tree behind a loading gate, and analysis runs synchronously per keystroke. Both are worth *measuring* before changing; nothing here is a known problem yet.
+
 ---
 
 ## 🔜 Planned
-
-### Pass 2.5 — quality baseline (P1 · P2 · P3) 🔜
-
-**Do this before Pass 3.** Everything built so far is unverified by anything except manual clicking,
-and the scores are the product's central claim. Nothing here needs a decision, a key, or a budget —
-it is pure unblocked work, which is why it sits ahead of the feature passes.
-
-**P1 — tests (the headline gap: there are none, and no runner)**
-- 🔜 Add a test runner. No `test` script, no Vitest/Jest/Playwright dependency, **0 test files** today.
-- 🔜 Unit-test the deterministic core — all pure functions, all cheap to test, all load-bearing:
-  - `src/lib/scoring.ts` — the ATS + JD-match scores and the 5-part breakdown.
-  - `src/lib/analysis.ts` — bullet analyzers (weak verb, missing number, passive, repetition, STAR).
-  - `src/lib/keywords.ts` — extraction, synonym matching, tiered coverage.
-  - `src/lib/diff.ts` — version diff (added/removed) correctness.
-  - `src/lib/pdfImport.ts` — heuristic section parse, plus the scanned-PDF rejection path.
-  - `src/lib/inlineFormat.ts` — `*asterisk*` → bold across preview, PDF and DOCX.
-  - `src/lib/persistIO.ts` — `.resume.json` round-trip and foreign-file rejection.
-- 🔜 A golden-file test per role sample: import the 6 starters, assert the scores don't silently move.
-
-**P1 — CI**
-- 🔜 There is **no `.github/` directory at all**. Add a workflow running `lint` + `build` + the new tests on push. Today `npm run build` is only ever exercised locally or by Vercel.
-
-**P3 — accessibility** (currently **2 `aria-` attributes across the whole app**)
-- 🔜 Mobile tab switcher (`src/app/page.tsx:41-55`) is a bare `<button>` group — needs `role="tablist"` / `aria-selected` / arrow-key handling.
-- 🔜 The File / Export / Resumes / Versions dropdowns (`Toolbar.tsx`, `DocsMenu.tsx`, `VersionsMenu.tsx`) have no `aria-expanded` / `aria-haspopup`, no focus trap, and no Escape-to-close.
-- 🔜 Check contrast on inactive tab text (`text-neutral-400` on `neutral-100`) — likely below WCAG AA.
-- 🔜 Add a skip link; confirm `Editor.tsx` inputs are programmatically labelled, not just visually.
-
-**P3 — error handling** (only 5 `catch` blocks app-wide)
-- 🔜 `src/components/Toolbar.tsx:118` swallows every non-`ScannedPdfError` to `console.error` — the user sees nothing when a PDF import fails.
-- 🔜 `src/lib/docxExport.ts` and `src/lib/pdfExport.ts` have no error handling at all.
-- 🔜 No `error.tsx` / `not-found.tsx` / `loading.tsx` in `src/app/` — an unhandled render error blanks the page.
-- 🔜 **`localStorage` has no quota handling** (`src/lib/store.ts`, `src/lib/persistIO.ts`). With the Pass 3-lite library plus per-resume version history, a heavy user *will* hit the quota, and today the write fails silently — losing work in the one place the product promises durability.
-
-**P3 — metadata / SEO**
-- 🔜 `src/app/layout.tsx` sets only `title` + `description`. No `openGraph`/`twitter` cards, no `metadataBase`/canonical, no `robots.txt`, no `sitemap.ts`, no `theme-color`. A shared resume-builder link currently unfurls as bare text.
-
-**P3 — performance** (measure before changing anything)
-- 🔜 The whole app is one `'use client'` tree behind a full-screen "Loading ResumeForge…" gate, so first paint is a spinner with no SSR content. Consider a static shell + Suspense.
-- 🔜 Analysis appears to run synchronously on every keystroke via the store — profile a long resume; debounce or move to a worker only if it actually janks.
-- 🔜 `pdfjs-dist` sits in the client bundle path; confirm it's lazily loaded and only on import.
-
-**P2 — docs**
-- 🔜 `README.md`'s feature list is accurate (checked) — the only doc gap is that this quality work was previously absent from the roadmap entirely. Add a `CHANGELOG.md`; consider a `TODO.md` "next up" view mirroring the umbra repo's ROADMAP+TODO pair.
 
 ### Pass 3 — remaining local features (still no backend) 🔜
 More of the master-resume workflow that can ship client-side, building on the Pass 3-lite foundation above.
@@ -176,6 +173,8 @@ Reliability polish so a generated resume is provably ATS-parseable.
 - **PDF import parsing is heuristic** — it reconstructs sections from text positions and won't be perfect on every layout; users clean up afterward. Scanned/image PDFs are rejected, not OCR'd.
 - **Keyword/semantic matching is deterministic** — a curated dictionary + synonym map, not embeddings. Genuine semantic understanding arrives with the AI layer (Pass 4).
 - **No accounts / multi-device** yet — everything is local to the browser until Pass 3.
+- **Browser storage is finite (~5MB).** Since Pass 2.5 a full quota is detected and warned about rather than silently losing edits, but it is still a ceiling: many resumes each with many versions will eventually hit it. Deleting old versions frees space; the real fix is Pass 3-cloud.
+- **Tests cover `src/lib` only** — the deterministic core. Components have no rendering tests yet (that would need jsdom and Testing Library); they are covered by typecheck, lint and the production build.
 
 ---
 

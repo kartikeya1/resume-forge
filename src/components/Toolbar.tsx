@@ -1,12 +1,13 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useResumeStore } from '@/lib/store';
 import { importPdf, ScannedPdfError } from '@/lib/pdfImport';
 import { exportDocx } from '@/lib/docxExport';
 import { exportPdf } from '@/lib/pdfExport';
 import { saveSnapshot, openSnapshot, InvalidSnapshotError } from '@/lib/persistIO';
 import { SAMPLES } from '@/lib/samples';
+import { onPersistFailure, type PersistFailure } from '@/lib/storage';
 import type { Theme } from '@/lib/useTheme';
 import { DocsMenu } from './DocsMenu';
 import { VersionsMenu } from './VersionsMenu';
@@ -46,6 +47,10 @@ function IconToggle({
     <button
       type="button"
       title={title}
+      aria-label={title}
+      // `active` is a two-state toggle, so announce it as pressed rather than
+      // leaving the state visible only as a colour change.
+      aria-pressed={active === undefined ? undefined : active}
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-medium transition ${
         active
@@ -100,6 +105,11 @@ export function Toolbar({
   const jsonRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<null | string>(null);
   const [error, setError] = useState<string | null>(null);
+  const [persistFailure, setPersistFailure] = useState<PersistFailure | null>(null);
+
+  // Autosave runs on every edit, so a storage failure has to be surfaced from
+  // the storage layer rather than from any one user action.
+  useEffect(() => onPersistFailure(setPersistFailure), []);
 
   // Confirm before any action that replaces the current resume.
   function guard(fn: () => void) {
@@ -144,12 +154,38 @@ export function Toolbar({
     if (def) guard(() => importResume(def.build()));
   }
 
+  // Both exports previously had no error path at all: a failure left the user
+  // with no file and no explanation. Surface it in the same banner as imports.
   async function onExportDocx() {
+    setError(null);
     setBusy('Building .docx…');
     try {
       await exportDocx(resume);
+    } catch (err) {
+      console.error(err);
+      setError('Could not build the .docx file. Try again, or use Download PDF instead.');
     } finally {
       setBusy(null);
+    }
+  }
+
+  function onExportPdf() {
+    setError(null);
+    try {
+      exportPdf();
+    } catch (err) {
+      console.error(err);
+      setError('Could not open the print dialog. Check that your browser is not blocking pop-ups.');
+    }
+  }
+
+  function onSaveToFile() {
+    setError(null);
+    try {
+      saveSnapshot(resume, jobDescription);
+    } catch (err) {
+      console.error(err);
+      setError('Could not save the file. Your browser may have blocked the download.');
     }
   }
 
@@ -172,7 +208,11 @@ export function Toolbar({
 
         <div className="flex-1" />
 
-        {busy && <span className="text-xs text-neutral-500">{busy}</span>}
+        {busy && (
+          <span role="status" aria-live="polite" className="text-xs text-neutral-600 dark:text-neutral-400">
+            {busy}
+          </span>
+        )}
 
         {/* File: content in/out */}
         <Menu label="📄 File" width="w-64">
@@ -181,7 +221,7 @@ export function Toolbar({
               <GroupLabel>Add content</GroupLabel>
               <Row onClick={() => { pdfRef.current?.click(); close(); }}>⤒ Import from PDF…</Row>
               <Row onClick={() => { jsonRef.current?.click(); close(); }}>📂 Open saved file…</Row>
-              <Row onClick={() => { saveSnapshot(resume, jobDescription); close(); }}>💾 Save to file</Row>
+              <Row onClick={() => { onSaveToFile(); close(); }}>💾 Save to file</Row>
               <Divider />
               <GroupLabel>Start from a sample</GroupLabel>
               <div className="max-h-56 overflow-y-auto">
@@ -202,7 +242,7 @@ export function Toolbar({
         <Menu label="⬇ Export" width="w-52" align="right">
           {(close) => (
             <div>
-              <Row onClick={() => { exportPdf(); close(); }}>Download PDF</Row>
+              <Row onClick={() => { onExportPdf(); close(); }}>Download PDF</Row>
               <Row onClick={() => { onExportDocx(); close(); }}>Download Word (.docx)</Row>
             </div>
           )}
@@ -222,8 +262,32 @@ export function Toolbar({
         <input ref={jsonRef} type="file" accept="application/json,.json" onChange={onOpen} className="hidden" />
       </div>
 
+      {/* Not dismissable: autosave is genuinely broken until space is freed,
+          so hiding it would just hide ongoing data loss. */}
+      {persistFailure && (
+        <div
+          role="alert"
+          className="flex items-start justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
+        >
+          <span>
+            <strong className="font-semibold">Autosave is off. </strong>
+            {persistFailure.message}
+          </span>
+          <button
+            type="button"
+            onClick={onSaveToFile}
+            className="shrink-0 rounded border border-amber-400 px-2 py-0.5 font-medium text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900"
+          >
+            Save to file
+          </button>
+        </div>
+      )}
+
       {error && (
-        <div className="flex items-start justify-between gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+        <div
+          role="alert"
+          className="flex items-start justify-between gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
+        >
           <span>{error}</span>
           <button type="button" onClick={() => setError(null)} className="shrink-0 font-medium text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200">
             Dismiss

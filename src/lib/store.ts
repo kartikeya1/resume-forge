@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type { Resume } from './types';
 import { emptyResume, sampleResume } from './sampleData';
 import { newId } from './ids';
+import { createGuardedStorage } from './storage';
 
 // ---- Library model (local, no backend) -------------------------------------
 
@@ -257,6 +258,11 @@ export const useResumeStore = create<ResumeState>()(
     {
       name: 'resume-forge:v1',
       version: 2,
+      // Wrapped so a full or unavailable localStorage surfaces a warning instead
+      // of throwing on every write and silently dropping the user's edits.
+      storage: createJSONStorage(() =>
+        createGuardedStorage(() => (typeof window === 'undefined' ? undefined : window.localStorage))
+      ),
       partialize: (s) => ({
         resume: s.resume,
         jobDescription: s.jobDescription,

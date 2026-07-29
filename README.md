@@ -4,7 +4,7 @@
 
 A web-based resume builder with a **live pageless preview**, a deterministic **ATS score**, and **job-description keyword matching** — built to help software engineering, product management, and MBA (sales/marketing) candidates tailor a clean, ATS-friendly resume.
 
-**Everything runs in your browser.** No account, no backend, no data leaves your machine — your work autosaves to `localStorage`, and you can export a portable save file whenever you like.
+**Everything runs in your browser.** No account, no backend, no data leaves your machine — your work autosaves to `localStorage`, and you can export a portable save file whenever you like. If browser storage ever fills up, the app tells you autosave has stopped rather than losing edits quietly.
 
 🔗 **Live:** https://resume-forge-two-pi.vercel.app
 
@@ -55,6 +55,8 @@ Everything derives from one typed JSON object ([`src/lib/types.ts`](./src/lib/ty
 ### State & persistence
 Global state lives in a **Zustand** store ([`src/lib/store.ts`](./src/lib/store.ts)). It holds a **library** of documents (each with its own resume, job description, application status, master flag, and version history) plus the live working copy of the active document. The `persist` middleware autosaves the whole library to `localStorage` (`resume-forge:v1`, with a versioned migration from the earlier single-document shape). All edits go through a single `update(recipe)` action that structurally clones the active resume, so React re-renders predictably.
 
+Persistence goes through a **guarded storage layer** ([`src/lib/storage.ts`](./src/lib/storage.ts)) rather than raw `localStorage`. The browser is effectively the database here, and browser storage is finite (~5MB): if it fills up, writes fail. The wrapper never throws — it reports the failure so the app can show a persistent **"Autosave is off"** warning telling you to export a backup, and clears it once writes succeed again. Storage being unavailable entirely (Safari private mode) degrades to in-memory instead of crashing.
+
 **Bold formatting** is handled by a tiny shared parser ([`inlineFormat.ts`](./src/lib/inlineFormat.ts)): `*asterisks*` → bold segments, consumed by both the React preview (`<Inline>`) and the DOCX exporter (bold `TextRun`s). **Version diffs** are a deterministic content-level comparison ([`diff.ts`](./src/lib/diff.ts)).
 
 ### The edit → preview → score loop
@@ -89,6 +91,8 @@ A class-based Tailwind v4 dark variant (`@custom-variant dark`) is toggled by a 
 | PDF parsing | pdf.js (`pdfjs-dist`) |
 | DOCX export | `docx` |
 | PDF export | Browser print-to-PDF |
+| Tests | Vitest (123 tests over `src/lib`) |
+| CI | GitHub Actions — typecheck, lint, test, build |
 | Hosting | Vercel (auto-deploy on push) |
 
 No backend, no database, no auth, no API keys — the entire app is client-side and statically prerendered.
@@ -101,8 +105,12 @@ No backend, no database, no auth, no API keys — the entire app is client-side 
 resume-forge/
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx          # Root layout + metadata
+│   │   ├── layout.tsx          # Root layout + metadata (OG/Twitter, canonical, themeColor)
 │   │   ├── page.tsx            # 3-pane shell (editor · preview · insights), theme + analysis toggles
+│   │   ├── error.tsx           # Error boundary — keeps the user's work visible on a crash
+│   │   ├── opengraph-image.tsx # Generated 1200x630 social card
+│   │   ├── robots.ts           # robots.txt
+│   │   ├── sitemap.ts          # sitemap.xml
 │   │   └── globals.css         # Tailwind, dark variant, print styles
 │   ├── components/
 │   │   ├── Toolbar.tsx         # Brand + Resumes / Versions menus; grouped File & Export menus; analysis + theme toggles
@@ -125,10 +133,16 @@ resume-forge/
 │       ├── docxExport.ts       # DOCX generation
 │       ├── pdfExport.ts        # Print-to-PDF (single seamless page)
 │       ├── persistIO.ts        # Save/Open .resume.json snapshots
+│       ├── storage.ts          # Guarded localStorage — quota detection + autosave warning
+│       ├── site.ts             # Canonical URL + shared copy for metadata/robots/sitemap
 │       ├── samples.ts          # 6 role sample resumes
 │       ├── sampleData.ts       # Empty + default resume
 │       ├── useTheme.ts         # Persisted light/dark toggle
-│       └── ids.ts              # Unique id helper
+│       ├── useMounted.ts       # Hydration gate (useSyncExternalStore)
+│       ├── ids.ts              # Unique id helper
+│       └── *.test.ts           # 123 Vitest tests over the deterministic core
+├── .github/workflows/ci.yml    # typecheck → lint → test → build
+├── vitest.config.ts            # Test runner config
 ├── next.config.ts              # Pins Turbopack root
 ├── README.md
 └── ROADMAP.md                  # What's done + all future passes
@@ -142,17 +156,33 @@ Requires Node.js 20.9+.
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
-npm run build    # production build (Turbopack)
-npm run start    # serve the production build
+npm run dev            # http://localhost:3000
+npm run build          # production build (Turbopack)
+npm run start          # serve the production build
 npm run lint
+npm run typecheck      # tsc --noEmit
+npm test               # vitest run — 123 tests
+npm run test:watch     # vitest in watch mode
+npm run test:coverage  # coverage over src/lib
 ```
+
+### Tests & CI
+
+The suite covers **`src/lib`** — the deterministic scoring, keyword, analysis, diff, save-file and
+storage logic that the product's ATS and JD-match claims rest on. These are pure functions, so the
+tests need no DOM and run in well under a second. UI components are not render-tested; they are
+covered by typecheck, lint and the production build.
+
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml) runs **typecheck → lint → test → build** on
+every push and PR to `main`.
 
 <br>
 
 ## Deployment
 
-Zero-config on **Vercel** (framework preset **Next.js**, no environment variables). The GitHub repo is connected to a Vercel project, so **every push to `main` triggers an automatic production deploy**.
+Zero-config on **Vercel** (framework preset **Next.js**). The GitHub repo is connected to a Vercel project, so **every push to `main` triggers an automatic production deploy**.
+
+The one optional environment variable is **`NEXT_PUBLIC_SITE_URL`**. It sets the canonical URL used by the metadata, `robots.txt` and `sitemap.xml` ([`src/lib/site.ts`](./src/lib/site.ts)); set it on a preview deployment so those point at the preview host instead of production. Without it the production URL is used, which is correct for production.
 
 <br>
 
