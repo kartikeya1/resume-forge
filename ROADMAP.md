@@ -167,6 +167,22 @@ Reliability polish so a generated resume is provably ATS-parseable.
 
 ---
 
+## Verified non-issues (do not re-investigate)
+
+- **Vercel's dashboard shows "No Production Deployment" for this project. Ignore it — it is wrong.**
+  Checked on 2026-07-29 against the Vercel API: the latest production deployment is
+  `dpl_5VTFBkkNZxiNKUvQnaS2pH9dZr21`, with `source: git`, `target: production`,
+  `githubCommitRef: main`, `githubCommitSha: b9ec985` (the Pass 2.5 commit), state `READY`, aliased to
+  `resume-forge-two-pi.vercel.app`. The live site independently confirms it — `/robots.txt`,
+  `/sitemap.xml` and `/opengraph-image` all return 200 and the homepage carries the new OG tags, none
+  of which existed before that commit.
+  So **git auto-deploy works and production is current**; only the overview card is stale. A hard
+  refresh usually clears it. Note that `vercel inspect --json` returns a trimmed object with **no**
+  `meta`/`gitSource` fields — absence there is not evidence of a CLI deploy, which is an easy wrong
+  turn when diagnosing this. Query the REST API (`/v13/deployments/<id>`) instead.
+
+---
+
 ## Known limitations (current state)
 
 - **PDF export uses the browser print dialog** — faithful and keeps text selectable, but not yet a one-click server render (that's Pass 5). Worth a manual click-test.
