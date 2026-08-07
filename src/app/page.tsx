@@ -41,14 +41,14 @@ export default function Home() {
         aria-live="polite"
         className="flex h-screen items-center justify-center text-sm text-neutral-600 dark:text-neutral-400"
       >
-        Loading ResumeForge…
+        Loading ResumeForge...
       </div>
     );
   }
 
   return (
     <div className={`flex h-screen flex-col bg-neutral-100 dark:bg-neutral-950 ${theme === 'dark' ? 'dark' : ''}`}>
-      {/* Visible only once focused — lets keyboard users jump the whole top bar. */}
+      {/* Visible only once focused - lets keyboard users jump the whole top bar. */}
       <a
         href="#panel-preview"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-neutral-900 focus:px-3 focus:py-2 focus:text-sm focus:text-white dark:focus:bg-white dark:focus:text-neutral-900"
@@ -107,7 +107,7 @@ export default function Home() {
           <Editor />
         </aside>
 
-        {/* Preview — surround goes dark, the paper itself stays light */}
+        {/* Preview - surround goes dark, the paper itself stays light */}
         <main
           id="panel-preview"
           role="tabpanel"

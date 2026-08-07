@@ -61,7 +61,7 @@ function aggregate(bulletGroups: string[][]): BulletRating {
 }
 
 function DateRange({ start, end }: { start: string; end: string }) {
-  const t = [start, end].filter(Boolean).join(' – ');
+  const t = [start, end].filter(Boolean).join(' - ');
   if (!t) return null;
   return <span className="shrink-0 text-[11.5px] text-neutral-600">{t}</span>;
 }

@@ -3,7 +3,7 @@
 // The app is local-first: the browser IS the database. With a resume library
 // plus up to 30 versions per resume, a heavy user can genuinely exhaust the
 // ~5MB localStorage quota. Previously the write simply threw, the user saw
-// nothing, and every subsequent edit was silently discarded — the worst
+// nothing, and every subsequent edit was silently discarded - the worst
 // possible failure for the one thing the product promises to keep safe.
 //
 // This wrapper never throws. It records the failure and notifies subscribers so
@@ -34,13 +34,13 @@ export function describeFailure(e: unknown): PersistFailure {
     return {
       kind: 'quota',
       message:
-        'Your browser’s storage is full, so recent changes are no longer being saved. Use File → Save to file to back up this resume, then delete old versions or resumes to free space.',
+        'Your browser\'s storage is full, so recent changes are no longer being saved. Use File → Save to file to back up this resume, then delete old versions or resumes to free space.',
     };
   }
   return {
     kind: 'unknown',
     message:
-      'Your browser refused to save this resume locally. Use File → Save to file to keep a copy — changes may be lost when you close the tab.',
+      'Your browser refused to save this resume locally. Use File → Save to file to keep a copy - changes may be lost when you close the tab.',
   };
 }
 
@@ -69,7 +69,7 @@ function emit(failure: PersistFailure | null) {
   if (changed) listeners.forEach((fn) => fn(failure));
 }
 
-/** Exposed for tests — clears the module-level failure state. */
+/** Exposed for tests - clears the module-level failure state. */
 export function resetPersistFailure() {
   current = null;
   listeners.clear();

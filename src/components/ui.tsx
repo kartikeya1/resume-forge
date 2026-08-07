@@ -111,7 +111,7 @@ export function IconBtn({
       type="button"
       title={title}
       // The visible content is a glyph, so `title` is the only human-readable
-      // name — mirror it into aria-label rather than relying on tooltip text.
+      // name - mirror it into aria-label rather than relying on tooltip text.
       aria-label={title}
       onClick={onClick}
       className={`inline-flex h-7 w-7 items-center justify-center rounded-md border text-sm transition ${
@@ -179,7 +179,7 @@ export function SectionCard({
 // callback so items can dismiss the menu when clicked. Closes on outside click
 // and on Escape, and returns focus to the trigger so keyboard users are not
 // stranded at the top of the document. Backs every dropdown in the top bar
-// (File, Export, Resumes, Versions) — fix behaviour here, not per menu.
+// (File, Export, Resumes, Versions) - fix behaviour here, not per menu.
 export function Menu({
   label,
   width = 'w-72',
@@ -199,8 +199,8 @@ export function Menu({
   // Deliberately does NOT move focus. `children` is invoked during render, so a
   // callback that touches triggerRef would read a ref during render. Clicking a
   // row is a pointer interaction where the browser's own focus handling is
-  // correct anyway; the case that actually matters for keyboard users —
-  // dismissing with Escape — restores focus from the effect below, where
+  // correct anyway; the case that actually matters for keyboard users -
+  // dismissing with Escape - restores focus from the effect below, where
   // reading the ref is safe.
   const close = useCallback(() => setOpen(false), []);
 

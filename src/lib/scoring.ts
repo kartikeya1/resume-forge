@@ -166,7 +166,7 @@ export function analyze(resume: Resume, jd: string): Analysis {
   const breakdown: ScoreBreakdown[] = [
     { label: 'ATS Compatibility', score: atsCompat, detail: 'Core sections + parseable contact info.' },
     { label: 'Impact', score: impact, detail: `${withNumbers}/${bullets.length || 0} bullets have measurable numbers.` },
-    { label: 'Recruiter Readability', score: readability, detail: `Avg bullet ${Math.round(avgLen)} words (ideal 8–24).` },
+    { label: 'Recruiter Readability', score: readability, detail: `Avg bullet ${Math.round(avgLen)} words (ideal 8-24).` },
     { label: 'Formatting', score: formatting, detail: 'Consistent dates, links, and length.' },
     { label: 'Keyword Match', score: clamp(keywordScore), detail: jd.trim() ? `${keywords.filter((k) => k.present).length}/${keywords.length} JD keywords found.` : 'Paste a job description to score.' },
   ];
@@ -186,14 +186,14 @@ export function analyze(resume: Resume, jd: string): Analysis {
     a('email', 'Add a professional email address', hasEmail),
     a('phone', 'Add a phone number', hasPhone),
     a('links', 'Add a LinkedIn or portfolio link', hasLinks),
-    a('summary', 'Write a 2–3 line summary', hasSummary),
+    a('summary', 'Write a 2-3 line summary', hasSummary),
     a('experience', 'Add at least one work experience', hasExperience),
     a('skills', 'List your key skills', hasSkills),
     a('education', 'Add your education', hasEducation),
     a('bullets-count', 'Have at least 4 achievement bullets', bullets.length >= 4),
     a('quantify', 'Quantify at least half of your bullets with numbers', bullets.length > 0 && withNumbers / bullets.length >= 0.5),
     a('weak-verbs', 'Replace weak openers like "Responsible for" / "Worked on"', bullets.length > 0 && weak === 0),
-    a('length', 'Keep the resume between 150–900 words', words >= 150 && words <= 900),
+    a('length', 'Keep the resume between 150-900 words', words >= 150 && words <= 900),
   ];
 
   // JD-derived actionables: one per missing critical/important keyword.

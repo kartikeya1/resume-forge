@@ -95,8 +95,8 @@ describe('text extraction', () => {
   });
 });
 
-describe('analyze — score bounds and invariants', () => {
-  it('keeps every score within 0–100', () => {
+describe('analyze - score bounds and invariants', () => {
+  it('keeps every score within 0-100', () => {
     for (const r of [emptyResume(), sampleResume(), strongResume()]) {
       const a = analyze(r, 'We need a product manager with SQL and A/B testing experience.');
       expect(a.atsScore).toBeGreaterThanOrEqual(0);
@@ -137,7 +137,7 @@ describe('analyze — score bounds and invariants', () => {
   });
 });
 
-describe('analyze — JD behaviour', () => {
+describe('analyze - JD behaviour', () => {
   it('returns null jdMatchScore when no JD is supplied', () => {
     expect(analyze(strongResume(), '').jdMatchScore).toBeNull();
     expect(analyze(strongResume(), '   ').jdMatchScore).toBeNull();
@@ -183,7 +183,7 @@ describe('analyze — JD behaviour', () => {
   });
 });
 
-describe('analyze — actionables reflect resume state', () => {
+describe('analyze - actionables reflect resume state', () => {
   it('marks contact actionables done on a complete resume', () => {
     const a = analyze(strongResume(), '');
     const byId = Object.fromEntries(a.actionables.map((x) => [x.id, x.done]));
@@ -225,14 +225,14 @@ describe('analyze — actionables reflect resume state', () => {
   });
 });
 
-describe('analyze — determinism', () => {
+describe('analyze - determinism', () => {
   it('produces identical output for identical input', () => {
     const jd = 'Required: SQL, roadmap, A/B testing.';
     expect(analyze(strongResume(), jd)).toEqual(analyze(strongResume(), jd));
   });
 
   it('holds the built-in samples stable (golden guard against silent score drift)', () => {
-    // Not asserting exact numbers — those are allowed to change deliberately.
+    // Not asserting exact numbers - those are allowed to change deliberately.
     // Asserting the sample is a *healthy* resume, which it must stay, or the
     // "Load sample" affordance starts teaching users the wrong thing.
     const a = analyze(sampleResume(), '');

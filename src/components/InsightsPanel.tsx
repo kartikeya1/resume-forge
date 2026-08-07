@@ -27,7 +27,7 @@ function ScoreDial({ label, value }: { label: string; value: number | null }) {
   return (
     <div className={`flex-1 px-3 py-2.5 text-center ${CARD}`}>
       <div className={`text-3xl font-bold tabular-nums ${value === null ? 'text-neutral-300 dark:text-neutral-600' : scoreColor(value)}`}>
-        {value === null ? '—' : value}
+        {value === null ? '-' : value}
       </div>
       <div className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{label}</div>
     </div>
@@ -143,14 +143,14 @@ const RATING_STYLE = {
 function WritingIssues({ deep }: { deep: DeepAnalysis }) {
   const { flagged, repetitions } = deep;
   if (!flagged.length && !repetitions.length) {
-    return <p className="text-xs text-emerald-600 dark:text-emerald-400">No writing issues detected — every bullet reads strong. ✓</p>;
+    return <p className="text-xs text-emerald-600 dark:text-emerald-400">No writing issues detected - every bullet reads strong. ✓</p>;
   }
   return (
     <div className="space-y-3">
       {repetitions.length > 0 && (
         <div className="rounded-md bg-neutral-50 p-2 text-xs text-neutral-600 dark:bg-neutral-900 dark:text-neutral-300">
           <span className="font-medium">Repeated openers:</span>{' '}
-          {repetitions.map((r) => `"${r.verb}" ×${r.count}`).join(', ')} — vary your action verbs.
+          {repetitions.map((r) => `"${r.verb}" ×${r.count}`).join(', ')} - vary your action verbs.
         </div>
       )}
       <ul className="space-y-2">
@@ -202,7 +202,7 @@ function AnalyticsView({ deep }: { deep: DeepAnalysis }) {
       >
         <div className={`text-lg font-semibold tabular-nums ${timeIdeal ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}>{a.readingTimeSec}s</div>
         <div className="text-[10px] uppercase tracking-wide text-neutral-400">Recruiter skim</div>
-        <div className="mt-0.5 text-[10px] text-neutral-400">ideal 20–35s</div>
+        <div className="mt-0.5 text-[10px] text-neutral-400">ideal 20-35s</div>
       </div>
     </div>
   );

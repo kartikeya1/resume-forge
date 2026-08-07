@@ -65,7 +65,7 @@ const SECTION_PATTERNS: Array<{ key: keyof Resume | 'contact'; re: RegExp }> = [
   { key: 'certifications', re: /^(certifications?|licenses?)\b/i },
 ];
 
-const BULLET_RE = /^[\s]*[•·▪◦*\-–—]\s+/;
+const BULLET_RE = /^[\s]*[•·▪◦*\---]\s+/;
 
 function detectSection(line: string): string | null {
   const compact = line.trim();
@@ -180,14 +180,14 @@ function parseExperience(lines: string[]): Resume['experience'] {
     } else {
       pushCur();
       cur = blankExp();
-      // Try to split "Role — Company | Dates"
-      const dates = raw.match(/((jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{4}|\d{4})\s*[–\-—to]+\s*(present|current|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{4}|\d{4})/i);
+      // Try to split "Role - Company | Dates"
+      const dates = raw.match(/((jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{4}|\d{4})\s*[-\--to]+\s*(present|current|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{4}|\d{4})/i);
       if (dates) {
         cur.start = dates[1];
         cur.end = dates[3] ?? '';
       }
       const head = raw.replace(dates?.[0] ?? '', '').replace(/[|·]/g, '-').trim();
-      const segs = head.split(/\s+[-–—]\s+|\s+at\s+/i).map((s) => s.trim()).filter(Boolean);
+      const segs = head.split(/\s+[---]\s+|\s+at\s+/i).map((s) => s.trim()).filter(Boolean);
       cur.role = segs[0] ?? head;
       cur.company = segs[1] ?? '';
     }

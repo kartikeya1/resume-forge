@@ -21,7 +21,7 @@ function gatherLines(r: Resume): string[] {
   push('Title', r.contact.title);
   if (r.summary.trim()) push('Summary', r.summary);
   r.experience.forEach((e) => {
-    push('Role', `${e.role} — ${e.company}`);
+    push('Role', `${e.role} - ${e.company}`);
     e.bullets.forEach((b) => push('Bullet', b));
   });
   r.projects.forEach((p) => {
