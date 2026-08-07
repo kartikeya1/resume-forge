@@ -1,6 +1,6 @@
 // Pass 2 deterministic analysis: per-bullet ratings (for the preview heatmap),
 // writing-issue detection, resume analytics, structure checks, and an enhanced
-// JD analyzer. No AI — all rule-based and explainable.
+// JD analyzer. No AI - all rule-based and explainable.
 
 import type { Resume } from './types';
 import { SECTION_LABELS } from './types';
@@ -36,11 +36,11 @@ export function checkBullet(text: string): BulletCheck {
   const passive = PASSIVE_RE.test(text);
 
   const reasons: string[] = [];
-  if (weakStart) reasons.push('Starts with a weak phrase — open with an action verb.');
+  if (weakStart) reasons.push('Starts with a weak phrase - open with an action verb.');
   if (!hasNumber) reasons.push('Add a measurable result (%, $, count, or time).');
-  if (passive) reasons.push('Passive voice — rewrite in active voice.');
-  if (!strongVerb && !weakStart) reasons.push('Open with a stronger action verb (Led, Built, Reduced…).');
-  if (words > 32) reasons.push('Long bullet — tighten toward a single line.');
+  if (passive) reasons.push('Passive voice - rewrite in active voice.');
+  if (!strongVerb && !weakStart) reasons.push('Open with a stronger action verb (Led, Built, Reduced...).');
+  if (words > 32) reasons.push('Long bullet - tighten toward a single line.');
   if (words > 0 && words < 4) reasons.push('Too short to convey impact.');
 
   let rating: BulletRating;
@@ -178,7 +178,7 @@ function computeAnalytics(resume: Resume): Analytics {
     actionVerbs: bullets.filter(bulletStartsStrong).length,
     passiveSentences: bullets.filter((b) => PASSIVE_RE.test(b)).length,
     readabilityGrade: Math.max(0, Math.round(grade * 10) / 10),
-    // Recruiter skim estimate (not a full read); ideal band is ~20–35s.
+    // Recruiter skim estimate (not a full read); ideal band is ~20-35s.
     readingTimeSec: Math.max(5, Math.round(words / 15)),
   };
 }
@@ -217,8 +217,8 @@ function computeStructure(resume: Resume): StructureCheck {
     const n = e.bullets.filter((b) => b.trim()).length;
     const title = e.role || e.company || 'A role';
     if (n === 0) lengthWarnings.push(`${title} has no bullets.`);
-    else if (n === 1) lengthWarnings.push(`${title} has only 1 bullet — add 1–2 more.`);
-    else if (n > 6) lengthWarnings.push(`${title} has ${n} bullets — trim to your top 4–6.`);
+    else if (n === 1) lengthWarnings.push(`${title} has only 1 bullet - add 1-2 more.`);
+    else if (n > 6) lengthWarnings.push(`${title} has ${n} bullets - trim to your top 4-6.`);
   });
 
   // Balance
@@ -237,7 +237,7 @@ function computeStructure(resume: Resume): StructureCheck {
   const order = resume.sectionOrder;
   const idx = (k: string) => order.indexOf(k as never);
   if (resume.experience.length && idx('education') !== -1 && idx('education') < idx('experience')) {
-    ordering.push('Move Experience above Education — you have work history to lead with.');
+    ordering.push('Move Experience above Education - you have work history to lead with.');
   }
   if (resume.experience.length && idx('projects') !== -1 && idx('projects') < idx('experience') && resume.projects.length) {
     ordering.push('Place Experience before Projects for an experienced profile.');

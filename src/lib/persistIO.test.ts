@@ -21,7 +21,7 @@ function validSnapshot(resume: Resume = sampleResume(), jobDescription = 'A JD')
   };
 }
 
-describe('openSnapshot — happy path', () => {
+describe('openSnapshot - happy path', () => {
   it('restores the resume and job description', async () => {
     const { resume, jobDescription } = await openSnapshot(fileFrom(validSnapshot()));
     expect(jobDescription).toBe('A JD');
@@ -48,7 +48,7 @@ describe('openSnapshot — happy path', () => {
   });
 });
 
-describe('openSnapshot — rejects foreign files', () => {
+describe('openSnapshot - rejects foreign files', () => {
   it('rejects invalid JSON with a readable message', async () => {
     await expect(openSnapshot(fileFrom('{not json'))).rejects.toThrow(InvalidSnapshotError);
     await expect(openSnapshot(fileFrom('{not json'))).rejects.toThrow(/not valid JSON/i);
@@ -82,7 +82,7 @@ describe('openSnapshot — rejects foreign files', () => {
   });
 });
 
-describe('openSnapshot — tolerates shape drift without crashing', () => {
+describe('openSnapshot - tolerates shape drift without crashing', () => {
   it('fills in missing sections from an empty resume', async () => {
     const partial = { contact: { name: 'Ada' } };
     const { resume } = await openSnapshot(

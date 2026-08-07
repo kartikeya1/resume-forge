@@ -9,7 +9,7 @@ export const SITE_URL = (
 
 export const SITE_NAME = 'ResumeForge';
 
-export const SITE_TITLE = 'ResumeForge — resume builder with live ATS & JD matching';
+export const SITE_TITLE = 'ResumeForge - resume builder with live ATS & JD matching';
 
 export const SITE_DESCRIPTION =
   'Build or import a resume, get a live ATS score and job-description keyword match, and export a clean, ATS-friendly PDF or DOCX. Free, private, and runs entirely in your browser.';

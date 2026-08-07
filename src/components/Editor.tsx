@@ -52,7 +52,7 @@ function ContactEditor() {
               <div className="w-28 shrink-0">
                 <TextInput value={l.label} placeholder="LinkedIn" onChange={(v) => update((d) => void (d.contact.links[i].label = v))} />
               </div>
-              <TextInput value={l.url} placeholder="linkedin.com/in/…" onChange={(v) => update((d) => void (d.contact.links[i].url = v))} />
+              <TextInput value={l.url} placeholder="linkedin.com/in/..." onChange={(v) => update((d) => void (d.contact.links[i].url = v))} />
               <IconBtn title="Remove link" danger onClick={() => update((d) => void d.contact.links.splice(i, 1))}>
                 ✕
               </IconBtn>
@@ -72,7 +72,7 @@ function SummaryEditor() {
     <SectionCard title="Summary">
       <AutoTextarea
         value={summary}
-        placeholder="2–3 lines on who you are, your strengths, and the impact you've had."
+        placeholder="2-3 lines on who you are, your strengths, and the impact you've had."
         minRows={3}
         onChange={(v) => update((d) => void (d.summary = v))}
       />
@@ -94,7 +94,7 @@ function BulletsEditor({
         {bullets.map((b, i) => (
           <div key={i} className="flex items-start gap-2">
             <span className="mt-2 text-neutral-400">•</span>
-            <AutoTextarea value={b} placeholder="Led / Built / Reduced … with a measurable result." onChange={(v) => onChange((arr) => void (arr[i] = v))} />
+            <AutoTextarea value={b} placeholder="Led / Built / Reduced ... with a measurable result." onChange={(v) => onChange((arr) => void (arr[i] = v))} />
             <div className="mt-0.5">
               <IconBtn title="Remove bullet" danger onClick={() => onChange((arr) => void arr.splice(i, 1))}>
                 ✕

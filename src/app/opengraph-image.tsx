@@ -20,7 +20,7 @@ export default function Image() {
           background: '#0a0a0a',
           color: '#fafafa',
           padding: '80px',
-          // System stack only — no font file is bundled, so nothing to load.
+          // System stack only - no font file is bundled, so nothing to load.
           fontFamily: 'sans-serif',
         }}
       >

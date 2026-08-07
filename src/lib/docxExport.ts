@@ -71,7 +71,7 @@ function sectionParagraphs(resume: Resume, key: SectionKey): Paragraph[] {
       if (resume.experience.length) {
         out.push(heading(SECTION_LABELS.experience));
         for (const e of resume.experience) {
-          out.push(titleWithDates(`${e.role}${e.company ? ', ' + e.company : ''}`, [e.start, e.end].filter(Boolean).join(' – ')));
+          out.push(titleWithDates(`${e.role}${e.company ? ', ' + e.company : ''}`, [e.start, e.end].filter(Boolean).join(' - ')));
           if (e.location) out.push(subtle(e.location));
           e.bullets.filter((b) => b.trim()).forEach((b) => out.push(bullet(b)));
         }
@@ -81,7 +81,7 @@ function sectionParagraphs(resume: Resume, key: SectionKey): Paragraph[] {
       if (resume.projects.length) {
         out.push(heading(SECTION_LABELS.projects));
         for (const p of resume.projects) {
-          out.push(titleWithDates(p.name, [p.start, p.end].filter(Boolean).join(' – ')));
+          out.push(titleWithDates(p.name, [p.start, p.end].filter(Boolean).join(' - ')));
           if (p.link) out.push(subtle(p.link));
           p.bullets.filter((b) => b.trim()).forEach((b) => out.push(bullet(b)));
         }
@@ -108,7 +108,7 @@ function sectionParagraphs(resume: Resume, key: SectionKey): Paragraph[] {
       if (resume.education.length) {
         out.push(heading(SECTION_LABELS.education));
         for (const e of resume.education) {
-          out.push(titleWithDates(e.school, [e.start, e.end].filter(Boolean).join(' – ')));
+          out.push(titleWithDates(e.school, [e.start, e.end].filter(Boolean).join(' - ')));
           if (e.degree || e.details) out.push(subtle([e.degree, e.details].filter(Boolean).join(' · ')));
         }
       }

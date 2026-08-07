@@ -24,7 +24,7 @@ describe('firstWord', () => {
   });
 });
 
-describe('checkBullet — ratings', () => {
+describe('checkBullet - ratings', () => {
   it('rates a strong verb + number + active voice as strong', () => {
     const c = checkBullet('Led the replatform, cutting settlement failures by 38%');
     expect(c.rating).toBe('strong');
@@ -63,7 +63,7 @@ describe('checkBullet — ratings', () => {
     const long = `Led ${'word '.repeat(40)}by 10%`;
     const c = checkBullet(long);
     expect(c.words).toBeGreaterThan(32);
-    expect(c.reasons).toContain('Long bullet — tighten toward a single line.');
+    expect(c.reasons).toContain('Long bullet - tighten toward a single line.');
   });
 
   it('always returns one of the three ratings', () => {
@@ -91,7 +91,7 @@ describe('checkBullet — ratings', () => {
   });
 });
 
-describe('deepAnalyze — analytics', () => {
+describe('deepAnalyze - analytics', () => {
   it('counts bullets and quantified bullets', () => {
     const d = deepAnalyze(resumeWithBullets(['Led growth by 10%', 'Built the tool']), '');
     expect(d.analytics.bullets).toBe(2);
@@ -116,7 +116,7 @@ describe('deepAnalyze — analytics', () => {
   });
 });
 
-describe('deepAnalyze — flagged bullets and repetition', () => {
+describe('deepAnalyze - flagged bullets and repetition', () => {
   it('flags problem bullets but not strong ones', () => {
     const d = deepAnalyze(
       resumeWithBullets([
@@ -153,7 +153,7 @@ describe('deepAnalyze — flagged bullets and repetition', () => {
   });
 });
 
-describe('deepAnalyze — structure checks', () => {
+describe('deepAnalyze - structure checks', () => {
   it('reports missing sections on an empty resume', () => {
     const d = deepAnalyze(emptyResume(), '');
     expect(d.structure.missingSections.length).toBeGreaterThan(0);
@@ -173,7 +173,7 @@ describe('deepAnalyze — structure checks', () => {
   });
 });
 
-describe('deepAnalyze — JD breakdown', () => {
+describe('deepAnalyze - JD breakdown', () => {
   it('is null when no JD is supplied', () => {
     expect(deepAnalyze(sampleResume(), '').jd).toBeNull();
     expect(deepAnalyze(sampleResume(), '   ').jd).toBeNull();

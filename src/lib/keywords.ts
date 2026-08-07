@@ -107,7 +107,7 @@ export function extractKeywords(jd: string, limit = 24): Keyword[] {
     if (STOPWORDS.has(tok)) continue;
     if (/^\d+$/.test(tok)) continue;
     const canonical = normalizeToken(tok);
-    // If this token already contributed via a multiword phrase, still count it —
+    // If this token already contributed via a multiword phrase, still count it -
     // it reinforces the canonical concept.
     bump(canonical, canonical.length <= tok.length ? canonical : tok);
   }

@@ -90,7 +90,7 @@ export function VersionsMenu() {
                           <div key={`a${i}`} className="text-[11px] text-emerald-600 dark:text-emerald-400">+ {l}</div>
                         ))}
                         {d.removed.map((l, i) => (
-                          <div key={`r${i}`} className="text-[11px] text-red-600 dark:text-red-400">− {l}</div>
+                          <div key={`r${i}`} className="text-[11px] text-red-600 dark:text-red-400">- {l}</div>
                         ))}
                       </div>
                     )}

@@ -122,7 +122,7 @@ export function Toolbar({
     if (!file) return;
     guard(async () => {
       setError(null);
-      setBusy('Parsing PDF…');
+      setBusy('Parsing PDF...');
       try {
         importResume(await importPdf(file));
       } catch (err) {
@@ -158,7 +158,7 @@ export function Toolbar({
   // with no file and no explanation. Surface it in the same banner as imports.
   async function onExportDocx() {
     setError(null);
-    setBusy('Building .docx…');
+    setBusy('Building .docx...');
     try {
       await exportDocx(resume);
     } catch (err) {
@@ -219,8 +219,8 @@ export function Toolbar({
           {(close) => (
             <div>
               <GroupLabel>Add content</GroupLabel>
-              <Row onClick={() => { pdfRef.current?.click(); close(); }}>⤒ Import from PDF…</Row>
-              <Row onClick={() => { jsonRef.current?.click(); close(); }}>📂 Open saved file…</Row>
+              <Row onClick={() => { pdfRef.current?.click(); close(); }}>⤒ Import from PDF...</Row>
+              <Row onClick={() => { jsonRef.current?.click(); close(); }}>📂 Open saved file...</Row>
               <Row onClick={() => { onSaveToFile(); close(); }}>💾 Save to file</Row>
               <Divider />
               <GroupLabel>Start from a sample</GroupLabel>
