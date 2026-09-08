@@ -42,3 +42,9 @@ next-env.d.ts
 
 # Local agent/editor config
 .claude/
+
+# Jobs Forge snapshots hold real job-search data (companies, recruiters,
+# rejections) and this repo is public. The dashboard reads the file from disk
+# via the File System Access API - it is never meant to be committed.
+*jobs-forge-snapshot*.json
+jobs-forge-snapshot*.json

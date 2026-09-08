@@ -4,7 +4,7 @@ This document tracks **what has been built** and **what is planned** across the 
 
 **Legend:** ✅ done · 🔜 planned · 💭 needs a product/infra decision before starting
 
-_Last verified: 2026-07-29 · Pass 2.5 shipped · 123 tests, typecheck, lint and production build all green._
+_Last verified: 2026-09-08 · Pass 2.5 + Jobs Forge Phase 0 shipped · 323 tests, typecheck, lint and production build all green._
 
 ### Phase mapping
 
@@ -20,9 +20,9 @@ Kartikeya's repos, so "Phase 2" means the same thing everywhere:
 | **P4** features | product work, no outside dependency | Pass 3-local, Pass 5 |
 | **P5** decision-gated | needs a provider/key/budget call | Pass 3-cloud, Pass 4-AI |
 
-**Execution order recommendation:** Pass 2.5 is complete, so **Pass 3-local is next.** The
-deterministic core now has 123 tests and CI behind it, which is what the later passes needed in
-order to change scoring safely.
+**Execution order recommendation:** Pass 2.5 is complete and Jobs Forge Phase 0 has shipped, so
+**Pass 3-local is next.** The deterministic core now has 323 tests and CI behind it, which is what
+the later passes needed in order to change scoring safely.
 
 ---
 
@@ -183,6 +183,35 @@ Reliability polish so a generated resume is provably ATS-parseable.
 
 ---
 
+## Jobs Forge (`/jobs`)
+
+A separate route tracking the status of job applications, sourced from a Gmail snapshot the user's
+agent writes to `~/Downloads/jobs-forge-snapshot.json`. The page reads that file with the File System
+Access API, so **it changes none of the local-first constraints above**: no backend, no API routes,
+nothing uploaded, nothing committed. `/jobs` is `noindex`, absent from the sitemap, and disallowed in
+robots.txt; snapshots are gitignored because this repo is public.
+
+**`JOBS-FORGE.md` at the repo root is the agent runbook** - the queries to run, the snapshot schema,
+and the judgments the deterministic pipeline cannot make on its own. Read it before refreshing the
+dashboard.
+
+✅ **Phase 0 - shipped.** The classifier (`src/lib/jobs/`), thread correlation, the derived-status
+ladder, the "Needs you" strip, the review drawer, and the first 90-day backfill (34 applications
+across 71 threads). 187 tests, fixtures verbatim from the real mailbox.
+
+🔜 **Phase 1** manual corrections (merge/split/rename, notes, manual add) · **Phase 2** Gmail
+write-back labels, staleness SLAs, follow-up drafts · **Phase 3** encrypted snapshot for phone
+access · **Phase 4** funnel analytics · **Phase 5** link applications to the resume version sent.
+
+Two things Phase 0 deliberately does *not* do, and should not be "fixed" without a decision:
+- **It never guesses.** An application whose company cannot be determined shows as unknown and lands
+  in the review drawer. A blank field is honest; a guessed one is a lie the dashboard repeats.
+- **A rejection is never inferred from a subject line alone.** Lever's "Thank you for your interest
+  in X" is a rejection and Teamtailor's "Thanks For Sharing Your Interest With Us!" is an
+  acknowledgement. Marking a live application dead is the one unrecoverable error here.
+
+---
+
 ## Known limitations (current state)
 
 - **PDF export uses the browser print dialog** - faithful and keeps text selectable, but not yet a one-click server render (that's Pass 5). Worth a manual click-test.
@@ -191,6 +220,8 @@ Reliability polish so a generated resume is provably ATS-parseable.
 - **No accounts / multi-device** yet - everything is local to the browser until Pass 3.
 - **Browser storage is finite (~5MB).** Since Pass 2.5 a full quota is detected and warned about rather than silently losing edits, but it is still a ceiling: many resumes each with many versions will eventually hit it. Deleting old versions frees space; the real fix is Pass 3-cloud.
 - **Tests cover `src/lib` only** - the deterministic core. Components have no rendering tests yet (that would need jsdom and Testing Library); they are covered by typecheck, lint and the production build.
+- **Jobs Forge auto-refresh needs Chrome or Edge.** The File System Access API is not implemented in Firefox and Safari cannot reliably persist a file handle, so those browsers import the snapshot manually instead - same data, one extra click. Chrome resets file permission to "prompt" on most page loads unless `/jobs` is installed as an app, which is why it ships a web manifest.
+- **Jobs Forge does not work on a phone.** The API does not exist on mobile and the snapshot file is not there. That is the direct cost of keeping the data off the internet; Phase 3 (an encrypted snapshot) is the fix.
 
 ---
 
