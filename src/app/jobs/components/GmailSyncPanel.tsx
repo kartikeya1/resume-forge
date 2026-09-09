@@ -29,34 +29,15 @@ export function GmailSyncPanel({
   followUpStaleDays: number;
   now: number;
 }) {
-  const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const panelId = useId();
   const followUps: FollowUpPlan = buildFollowUpPlan(applications, followUpStaleDays, now);
 
-  if (!open) {
-    return (
-      <button type="button" className={BTN} onClick={() => setOpen(true)} aria-expanded={false} aria-controls={panelId}>
-        Gmail sync
-        {labelPlan.changes.length > 0 && (
-          <span className="ml-1 rounded-full bg-neutral-200 px-1.5 text-[10px] tabular-nums dark:bg-neutral-700">
-            {labelPlan.changes.length}
-          </span>
-        )}
-      </button>
-    );
-  }
 
   const preview = showAll ? labelPlan.changes : labelPlan.changes.slice(0, 8);
 
   return (
     <div id={panelId} className={`${CARD} w-full px-3 py-3`}>
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Gmail sync</h3>
-        <button type="button" className={BTN} onClick={() => setOpen(false)} aria-expanded aria-controls={panelId}>
-          Close
-        </button>
-      </div>
 
       <p className={`max-w-prose text-sm ${TEXT}`}>
         This page cannot write to Gmail. It exports a plan; an agent applies it. Read the plan

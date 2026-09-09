@@ -4,7 +4,7 @@ import { useId, useState } from 'react';
 import { encryptJson, KDF_ITERATIONS } from '@/lib/jobs/crypto';
 import { assessPassphrase } from '@/lib/jobs/passphrase';
 import type { JobsSnapshot } from '@/lib/jobs/snapshot';
-import { BTN, BTN_PRIMARY, CARD, MUTED, TEXT } from './ui';
+import { BTN_PRIMARY, CARD, MUTED, TEXT } from './ui';
 
 export const PUBLISHED_PATH = '/jobs-snapshot.enc';
 
@@ -16,7 +16,6 @@ export const PUBLISHED_PATH = '/jobs-snapshot.enc';
  * typed here, used once, and never persisted or handed to anything.
  */
 export function PublishPanel({ snapshot }: { snapshot: JobsSnapshot }) {
-  const [open, setOpen] = useState(false);
   const [pass, setPass] = useState('');
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
@@ -30,22 +29,9 @@ export function PublishPanel({ snapshot }: { snapshot: JobsSnapshot }) {
   const mismatch = confirm.length > 0 && confirm !== pass;
   const canPublish = assessment.acceptable && !mismatch && confirm === pass && !busy;
 
-  if (!open) {
-    return (
-      <button type="button" className={BTN} onClick={() => setOpen(true)} aria-expanded={false} aria-controls={panelId}>
-        Publish for phone
-      </button>
-    );
-  }
 
   return (
     <div id={panelId} className={`${CARD} w-full px-3 py-3`}>
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Publish for phone</h3>
-        <button type="button" className={BTN} onClick={() => setOpen(false)} aria-expanded aria-controls={panelId}>
-          Close
-        </button>
-      </div>
 
       <p className={`max-w-prose text-sm ${TEXT}`}>
         Encrypts this snapshot in your browser and downloads it. Commit the file to{' '}

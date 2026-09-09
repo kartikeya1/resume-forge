@@ -5,7 +5,7 @@ import { interviewPrepPrompt } from '@/lib/jobs/activity';
 import { STATUS_BADGE, STATUS_LABELS, gmailThreadUrl, relativeTime } from '@/lib/jobs/labels';
 import type { Application, ExcludedThread } from '@/lib/jobs/types';
 import { EditPanel } from './EditPanel';
-import { CARD, CHIP, MUTED, TEXT } from './ui';
+import { CHIP, MUTED, TEXT } from './ui';
 import { WhyPopover } from './WhyPopover';
 
 export function StatusPill({ status }: { status: Application['status'] }) {
@@ -18,23 +18,6 @@ export function Flag({ tone, children }: { tone: 'urgent' | 'info'; children: Re
       ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200'
       : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300';
   return <span className={`${CHIP} ${cls}`}>{children}</span>;
-}
-
-export function KpiTile({ label, value, tone }: { label: string; value: number; tone?: 'urgent' }) {
-  return (
-    <div className={`${CARD} px-3 py-2`}>
-      <div
-        className={`text-2xl font-semibold tabular-nums ${
-          tone === 'urgent' && value > 0
-            ? 'text-amber-600 dark:text-amber-400'
-            : 'text-neutral-900 dark:text-neutral-100'
-        }`}
-      >
-        {value}
-      </div>
-      <div className={`text-[11px] uppercase tracking-wide ${MUTED}`}>{label}</div>
-    </div>
-  );
 }
 
 export function ApplicationRow({

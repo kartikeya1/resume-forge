@@ -29,8 +29,13 @@ export function EditPanel({ app, allApps }: { app: Application; allApps: Applica
   return (
     <div className="border-t border-neutral-100 bg-neutral-50 px-3 py-3 dark:border-neutral-700 dark:bg-neutral-900/40">
       <div className="grid gap-3 sm:grid-cols-2">
-        <TextInput label="Company" value={company} onChange={setCompanyLocal} placeholder="Company name" />
-        <TextInput label="Role" value={role} onChange={setRoleLocal} placeholder="Job title" />
+        {/* One cell per field - see the note in ManualAddForm. */}
+        <div>
+          <TextInput label="Company" value={company} onChange={setCompanyLocal} placeholder="Company name" />
+        </div>
+        <div>
+          <TextInput label="Role" value={role} onChange={setRoleLocal} placeholder="Job title" />
+        </div>
       </div>
 
       <div className="mt-3">
