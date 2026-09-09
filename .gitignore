@@ -48,3 +48,6 @@ next-env.d.ts
 # via the File System Access API - it is never meant to be committed.
 *jobs-forge-snapshot*.json
 jobs-forge-snapshot*.json
+
+# Ad-hoc verification scripts and scratch output - never committed.
+/scratch/
