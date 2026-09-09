@@ -1,6 +1,8 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { buildRefreshPrompt } from '@/lib/jobs/syncPrompt';
+import { CopyPromptBlock } from './CopyPromptBlock';
 import { BTN, BTN_PRIMARY, CARD, MUTED, TEXT } from './ui';
 import type { ConnectionState } from '@/lib/jobs/useSnapshot';
 
@@ -13,6 +15,7 @@ export function ConnectPanel({
   onConnect,
   onImport,
   onDrop,
+  now,
 }: {
   connection: ConnectionState;
   pickerSupported: boolean;
@@ -21,6 +24,7 @@ export function ConnectPanel({
   onConnect: () => void;
   onImport: (f: File) => void;
   onDrop: (dt: DataTransfer) => void;
+  now: number;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
@@ -43,13 +47,22 @@ export function ConnectPanel({
         Connect your snapshot file
       </h2>
       <p className={`mt-1.5 max-w-prose text-sm ${TEXT}`}>
-        Ask an agent to run the steps in <code className="text-xs">JOBS-FORGE.md</code>. It writes{' '}
-        <code className="text-xs">~/Downloads/jobs-forge-snapshot.json</code> from your Gmail. Point this
-        page at that file once and every later visit re-reads it automatically.
+        You need a snapshot of your Gmail first. Copy the prompt below into any AI that can read
+        your mail; it writes{' '}
+        <code className="text-xs">~/Downloads/jobs-forge-snapshot.json</code>. Point this page at
+        that file once and every later visit re-reads it automatically.
       </p>
       <p className={`mt-1.5 max-w-prose text-xs ${MUTED}`}>
         The file never leaves your machine. Nothing is uploaded and nothing is committed.
       </p>
+
+      <div className="mt-4">
+        <CopyPromptBlock
+          prompt={buildRefreshPrompt({ until: null, since: null, now })}
+          label="Copy the setup prompt"
+          hint="Self-contained - it carries the Gmail queries, the file format and the rules, so it works in any chat window on any machine."
+        />
+      </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {pickerSupported && (

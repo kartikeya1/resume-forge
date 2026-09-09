@@ -207,6 +207,7 @@ export function JobsDashboard() {
               onConnect={() => void s.connect()}
               onImport={(f) => void s.importFile(f)}
               onDrop={(dt) => void s.importDrop(dt)}
+              now={now}
             />
           )}
         </GatedShell>
@@ -274,6 +275,10 @@ export function JobsDashboard() {
                 staleHours={STALE_HOURS}
                 needsPermission={s.connection === 'needs-permission'}
                 activity={activity}
+                until={s.snapshot.window.until}
+                since={s.snapshot.window.since}
+                mailbox={s.snapshot.mailbox}
+                now={now}
               />
 
               {railPanel === 'board' ? (
@@ -311,6 +316,9 @@ export function JobsDashboard() {
                       applications={apps}
                       followUpStaleDays={settings.interviewSilenceDays}
                       now={now}
+                      until={s.snapshot.window.until}
+                      since={s.snapshot.window.since}
+                      mailbox={s.snapshot.mailbox}
                     />
                   )}
                 </RailPanel>

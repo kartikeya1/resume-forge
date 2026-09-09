@@ -1,6 +1,8 @@
 'use client';
 
 import type { ActivitySummary } from '@/lib/jobs/activity';
+import { buildRefreshPrompt } from '@/lib/jobs/syncPrompt';
+import { CopyPromptBlock } from './CopyPromptBlock';
 import { MUTED, TEXT } from './ui';
 
 /**
@@ -14,21 +16,42 @@ export function Banners({
   staleHours,
   needsPermission,
   activity,
+  until,
+  since,
+  mailbox,
+  now,
 }: {
   stale: boolean;
   staleHours: number;
   needsPermission: boolean;
   activity: ActivitySummary | null;
+  /** The snapshot window, so the refresh prompt asks for a delta not a rebuild. */
+  until: string | null;
+  since: string | null;
+  mailbox?: string;
+  now: number;
 }) {
   if (!stale && !needsPermission && !activity?.nudge) return null;
 
   return (
     <div className="space-y-2 px-3 pt-2">
       {stale && (
-        <p role="status" className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          This snapshot is more than {staleHours} hours old. Ask an agent to re-run{' '}
-          <code className="text-xs">JOBS-FORGE.md</code> before trusting it.
-        </p>
+        // The banner carries the prompt rather than just naming the problem:
+        // this is the exact moment the refresh is wanted, and sending the
+        // reader off to find a runbook is what made the old wording useless
+        // away from a configured machine.
+        <div
+          role="status"
+          className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+        >
+          <p>This snapshot is more than {staleHours} hours old. Refresh it before trusting it.</p>
+          <div className="mt-2">
+            <CopyPromptBlock
+              prompt={buildRefreshPrompt({ until, since, mailbox, now })}
+              label="Copy the refresh prompt"
+            />
+          </div>
+        </div>
       )}
 
       {needsPermission && (
