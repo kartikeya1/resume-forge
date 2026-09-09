@@ -243,3 +243,23 @@ describe('determinism', () => {
     expect(build(threads)).toEqual(build(threads));
   });
 });
+
+describe('why-trail data', () => {
+  it('records the join rule ids on the merged application', () => {
+    const r = build([T.jpmcApplied, T.jpmcRejected]);
+    expect(r.applications[0].mergeRuleIds).toContain('J4-req-id');
+  });
+
+  it('records per-thread classification reasons for both merged threads', () => {
+    const r = build([T.revolutApplied, T.revolutRejected, T.revolutTalentPool]);
+    const app = r.applications[0];
+    for (const id of app.threadIds) {
+      expect(app.classificationByThread[id]?.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('leaves mergeRuleIds empty for a single-thread application', () => {
+    const r = build([T.mastercard]);
+    expect(r.applications[0].mergeRuleIds).toEqual([]);
+  });
+});

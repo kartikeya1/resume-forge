@@ -1,7 +1,10 @@
 'use client';
 
+import { useId, useState } from 'react';
 import { STATUS_BADGE, STATUS_LABELS, gmailThreadUrl, relativeTime } from '@/lib/jobs/labels';
 import type { Application, ExcludedThread } from '@/lib/jobs/types';
+import { EditPanel } from './EditPanel';
+import { WhyPopover } from './WhyPopover';
 
 // Repeated class strings hoisted to module consts, matching the convention in
 // src/components/InsightsPanel.tsx.
@@ -43,11 +46,16 @@ export function ApplicationRow({
   app,
   now,
   reason,
+  allApps,
 }: {
   app: Application;
   now: number;
   reason?: string | null;
+  /** All applications, for the "merge with..." picker in the edit panel. */
+  allApps: Application[];
 }) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
   const primary = app.company ?? 'Unknown company';
   const href = app.threadIds.length ? gmailThreadUrl(app.threadIds[0]) : undefined;
 
@@ -66,7 +74,18 @@ export function ApplicationRow({
         <span className="ml-auto flex flex-wrap items-center gap-1.5">
           {app.flags.recruiterReplied && <Flag tone="info">Human replied</Flag>}
           {app.flags.needsReview && <Flag tone="info">Check</Flag>}
+          {app.edited && <Flag tone="info">Edited</Flag>}
           <StatusPill status={app.status} />
+          <WhyPopover app={app} />
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-controls={panelId}
+            className="rounded-md border border-neutral-300 px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700"
+          >
+            {open ? 'Close' : 'Edit'}
+          </button>
         </span>
       </div>
       <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 px-3 pb-2.5 text-xs ${MUTED}`}>
@@ -85,13 +104,20 @@ export function ApplicationRow({
             <span>{app.threadIds.length} threads merged</span>
           </>
         )}
-        {app.agentReason && (
+        {app.notes && (
+          <>
+            <span aria-hidden="true">&middot;</span>
+            <span className="italic">{app.notes}</span>
+          </>
+        )}
+        {app.agentReason && !app.notes && (
           <>
             <span aria-hidden="true">&middot;</span>
             <span className="italic">{app.agentReason}</span>
           </>
         )}
       </div>
+      {open && <div id={panelId}><EditPanel app={app} allApps={allApps} /></div>}
     </li>
   );
 }

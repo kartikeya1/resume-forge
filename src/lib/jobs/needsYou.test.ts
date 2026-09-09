@@ -10,7 +10,7 @@ function app(status: JobStatus, flags: Partial<Application['flags']> = {}, extra
     id: 'a', company: 'Acme', companyKey: 'acme', role: 'PM', roleKey: 'pm#', reqIds: [],
     status, statusRuleId: 'test', statusReason: 'because', decidedBy: 'rules',
     appliedAt: NOW - 30 * DAY, firstAt: NOW - 30 * DAY, lastAt: NOW - 1 * DAY,
-    events: [], threadIds: ['t1'], provenance: { company: 'agent', role: 'agent' },
+    events: [], threadIds: ['t1'], provenance: { company: 'agent', role: 'agent' }, mergeRuleIds: [], classificationByThread: {},
     flags: {
       recruiterReplied: false, awaitingMyReply: false, iReplied: false,
       deadlineAt: null, deadlineSource: null, deadlineMissed: false,

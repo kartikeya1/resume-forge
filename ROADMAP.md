@@ -4,7 +4,7 @@ This document tracks **what has been built** and **what is planned** across the 
 
 **Legend:** ✅ done · 🔜 planned · 💭 needs a product/infra decision before starting
 
-_Last verified: 2026-09-08 · Pass 2.5 + Jobs Forge Phase 0 shipped · 323 tests, typecheck, lint and production build all green._
+_Last verified: 2026-09-09 · Pass 2.5 + Jobs Forge Phase 0-1 shipped · 359 tests, typecheck, lint and production build all green._
 
 ### Phase mapping
 
@@ -197,11 +197,21 @@ dashboard.
 
 ✅ **Phase 0 - shipped.** The classifier (`src/lib/jobs/`), thread correlation, the derived-status
 ladder, the "Needs you" strip, the review drawer, and the first 90-day backfill (34 applications
-across 71 threads). 187 tests, fixtures verbatim from the real mailbox.
+across 71 threads).
 
-🔜 **Phase 1** manual corrections (merge/split/rename, notes, manual add) · **Phase 2** Gmail
-write-back labels, staleness SLAs, follow-up drafts · **Phase 3** encrypted snapshot for phone
-access · **Phase 4** funnel analytics · **Phase 5** link applications to the resume version sent.
+✅ **Phase 1 - shipped.** Correction UI (rename company/role, set status, notes, archive, `Reset to
+derived`), force-merge and force-split at the thread level, a manual "add application" for anything
+that never generated email (`src/lib/jobs/overrides.ts`, persisted via `overridesStore.ts`), a "why?"
+popover on every row exposing the status rule, field provenance, merge rule ids and per-thread
+classification trail, the review drawer promoted to keyboard-triaged inbox (arrow keys, `a` to add,
+`x` to dismiss), Gmail deep links, and CSV export. `reconcileOverrides` (built in Phase 0) is now
+wired in: when a fresh snapshot resolves something the rules could not before, hand edits follow the
+application to its new id instead of silently detaching. 359 tests, fixtures verbatim from the real
+mailbox.
+
+🔜 **Phase 2** Gmail write-back labels, staleness SLAs, follow-up drafts · **Phase 3** encrypted
+snapshot for phone access · **Phase 4** funnel analytics · **Phase 5** link applications to the resume
+version sent.
 
 Two things Phase 0 deliberately does *not* do, and should not be "fixed" without a decision:
 - **It never guesses.** An application whose company cannot be determined shows as unknown and lands

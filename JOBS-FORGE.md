@@ -248,6 +248,18 @@ Manager II - AI" and "Product Manager II - Experience" stay separate.
 GST, BankBazaar, LinkedIn/Glassdoor feeds and job boards are filtered by rule.
 You can pass them through; they land in the "filtered" drawer.
 
+**User corrections (Phase 1) live in the browser, not in the snapshot.** He may
+have renamed a company, changed a status by hand, merged or split threads, or
+added a manual application - none of that is in the JSON you write. It is
+stored separately (`localStorage`, key `jobs-forge:overrides:v1`) and survives
+every refresh automatically via `reconcileOverrides`. **You do not need to do
+anything about this** - just write the snapshot as described above and his
+edits will re-apply on top of it. The one thing worth knowing: if a company you
+now name for the first time causes two applications to merge that he had
+manually kept separate (or vice versa), his merge/split choice always wins -
+that is enforced by the join predicate itself (`J0`/`J1` veto before `J2`/`J3`
+force), not by anything you need to check.
+
 ---
 
 ## 7. Refresh procedure

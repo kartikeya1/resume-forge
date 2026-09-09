@@ -145,6 +145,7 @@ export function buildApplications(snapshot: JobsSnapshot, opts: BuildOptions = {
       lastAt: times.length ? Math.max(...times) : now,
       hint,
       needsReview: cls.confidence < 0.7 || !extracted.company,
+      classificationReasons: cls.reasons,
     });
   }
 
@@ -221,6 +222,10 @@ export function buildApplications(snapshot: JobsSnapshot, opts: BuildOptions = {
         role: (override?.role ? 'user' : bestRole?.source ?? 'none') as ProvenanceSource,
       },
       agentReason: members.find((m) => m.hint?.reason)?.hint?.reason,
+      mergeRuleIds: group.ruleIds,
+      classificationByThread: Object.fromEntries(
+        members.map((m) => [m.threadId, m.classificationReasons])
+      ),
       edited: !!override,
       archived: override?.archived,
       notes: override?.notes,
@@ -229,6 +234,44 @@ export function buildApplications(snapshot: JobsSnapshot, opts: BuildOptions = {
 
   for (const sig of statusSignals) {
     if (sig.companyKey !== '__attached__') orphanEvents.push(...sig.events);
+  }
+
+  // Manual entries carry no threads and skip classify/correlate entirely - a
+  // LinkedIn Easy Apply or a referral over WhatsApp never generated mail to
+  // reason about. Its status is exactly what the user set: there is no rule
+  // ladder to run over zero events.
+  for (const man of overrides.manual) {
+    const fieldOverride = overrides.fields[man.id];
+    applications.push({
+      id: man.id,
+      company: fieldOverride?.company ?? man.company,
+      companyKey: companyKey(fieldOverride?.company ?? man.company),
+      role: fieldOverride?.role ?? man.role ?? null,
+      roleKey: null,
+      reqIds: [],
+      status: fieldOverride?.status ?? man.status,
+      statusRuleId: 'user-manual',
+      statusReason: 'Added by hand - no email to derive this from.',
+      decidedBy: 'user',
+      flags: {
+        recruiterReplied: false, awaitingMyReply: false, iReplied: false,
+        deadlineAt: null, deadlineSource: null, deadlineMissed: false,
+        interviewAt: null, interviewMissed: false,
+        staleDays: Math.max(0, Math.floor((now - man.createdAt) / 86_400_000)),
+        duplicateMessages: 0, talentPooled: false, needsReview: false, conflicting: false,
+      },
+      appliedAt: null,
+      firstAt: man.createdAt,
+      lastAt: man.createdAt,
+      events: [],
+      threadIds: [],
+      provenance: { company: 'user', role: 'user' },
+      mergeRuleIds: [],
+      classificationByThread: {},
+      edited: true,
+      archived: fieldOverride?.archived ?? man.archived,
+      notes: fieldOverride?.notes ?? man.notes,
+    });
   }
 
   applications.sort((a, b) => b.lastAt - a.lastAt);

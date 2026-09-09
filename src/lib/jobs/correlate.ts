@@ -28,6 +28,8 @@ export interface ThreadCandidate {
   lastAt: number;
   hint?: AgentHint;
   needsReview: boolean;
+  /** classifyThread's rule-firing trail, for the UI's "why?" popover. */
+  classificationReasons: string[];
 }
 
 export interface CorrelateOptions {
@@ -319,7 +321,16 @@ export function reconcileOverrides(
     else fields[id] = value;
   }
 
-  return { merge: overrides.merge, split: overrides.split, fields };
+  // merge/split/manual/dismissedReview are all keyed by thread ids or a
+  // self-chosen id, never by the derived application id, so they need no
+  // reconciliation at all - only `fields` can go stale.
+  return {
+    merge: overrides.merge,
+    split: overrides.split,
+    fields,
+    manual: overrides.manual,
+    dismissedReview: overrides.dismissedReview,
+  };
 }
 
 export { companyKey };

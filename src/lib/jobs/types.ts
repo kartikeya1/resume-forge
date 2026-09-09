@@ -235,6 +235,10 @@ export interface Application {
   };
   /** The agent's own explanation, passed through untouched. */
   agentReason?: string;
+  /** Rule ids that joined these threads together (J0-J8), for the "why?" popover. */
+  mergeRuleIds: string[];
+  /** classifyThread's fired rules, per source thread. */
+  classificationByThread: Record<string, string[]>;
   /** True when the user has hand-edited this application. */
   edited?: boolean;
   archived?: boolean;
@@ -242,26 +246,45 @@ export interface Application {
 }
 
 /** User corrections. Always win over hints and rules. */
+export interface FieldOverride {
+  company?: string;
+  role?: string;
+  status?: JobStatus;
+  archived?: boolean;
+  notes?: string;
+}
+
+/**
+ * An application that never generated email - a LinkedIn Easy Apply, a
+ * referral over WhatsApp, a walk-in. It carries no threads, so it skips the
+ * whole classify/correlate pipeline and is appended after buildApplications
+ * runs. Its status is never derived - the user set it and it stays put.
+ */
+export interface ManualApplication {
+  id: string;
+  company: string;
+  role?: string;
+  status: JobStatus;
+  createdAt: number;
+  notes?: string;
+  archived?: boolean;
+}
+
 export interface UserOverrides {
   /** Groups of threadIds forced into one application. */
   merge: string[][];
   /** Groups of threadIds forced apart. */
   split: string[][];
   /** Keyed by Application.id. */
-  fields: Record<
-    string,
-    {
-      company?: string;
-      role?: string;
-      status?: JobStatus;
-      archived?: boolean;
-      notes?: string;
-    }
-  >;
+  fields: Record<string, FieldOverride>;
+  /** Applications with no source thread at all. */
+  manual: ManualApplication[];
+  /** Review-drawer threads the user has looked at and decided are not a job. */
+  dismissedReview: string[];
 }
 
 export function emptyOverrides(): UserOverrides {
-  return { merge: [], split: [], fields: {} };
+  return { merge: [], split: [], fields: {}, manual: [], dismissedReview: [] };
 }
 
 /** A thread we could not place - surfaced in the review drawer, never dropped. */
