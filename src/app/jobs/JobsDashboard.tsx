@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useIsDesktop } from '@/lib/useMediaQuery';
 import { useMounted } from '@/lib/useMounted';
 import { useTheme } from '@/lib/useTheme';
 import { buildApplications } from '@/lib/jobs';
 import { summariseActivity } from '@/lib/jobs/activity';
 import { composeBoard, type ChipFilter } from '@/lib/jobs/board';
-import { useBoardStore } from '@/lib/jobs/boardStore';
+import { useBoardStore, type RailPanel as RailPanelId } from '@/lib/jobs/boardStore';
 import { downloadCsv } from '@/lib/jobs/csv';
 import { buildLabelPlan, threadLabelsFromSnapshot } from '@/lib/jobs/labelPlan';
 import { CLOSED_STATUSES, STATUS_LABELS } from '@/lib/jobs/labels';
@@ -20,6 +21,7 @@ import type { Application, JobStatus } from '@/lib/jobs/types';
 import { CARD, MUTED } from './components/ui';
 import { AnalyticsPanel } from './components/AnalyticsPanel';
 import { Board } from './components/Board';
+import { StackBoard } from './components/StackBoard';
 import { Banners } from './components/Banners';
 import { ConnectPanel } from './components/ConnectPanel';
 import { GmailSyncPanel } from './components/GmailSyncPanel';
@@ -37,6 +39,10 @@ const STALE_HOURS = 36;
 
 export function JobsDashboard() {
   const mounted = useMounted();
+  // Safe to read below the `!mounted` guard: the server and the first client
+  // render both paint the loading state, so matchMedia is never consulted
+  // during hydration. See src/lib/useMediaQuery.ts.
+  const desktop = useIsDesktop();
   const { theme, toggle } = useTheme();
   const s = useSnapshot();
 
@@ -168,6 +174,12 @@ export function JobsDashboard() {
 
   const closedCount = apps.filter((a) => CLOSED_STATUSES.has(a.status)).length;
 
+  const addFromReview = (prefill: { company: string; role?: string }) => {
+    setReviewPrefill(prefill);
+    setManualAddKey((k) => k + 1);
+    setAddOpen(true);
+  };
+
   const changeStatus = (app: Application, next: JobStatus) => {
     setStatusOverride(app.id, next);
     // Moving a card to a closed status sends it to a lane that only exists
@@ -240,6 +252,10 @@ export function JobsDashboard() {
             warnings={s.warnings}
             theme={theme}
             onToggleTheme={toggle}
+            desktop={desktop}
+            sections={sections}
+            activeSection={railPanel}
+            onSelectSection={(id) => setRailPanel(id as RailPanelId)}
           />
 
           {addOpen && (
@@ -259,13 +275,15 @@ export function JobsDashboard() {
           )}
 
           <div className="flex min-h-0 flex-1">
-            <Rail
-              sections={sections}
-              active={railPanel}
-              onSelect={setRailPanel}
-              open={railOpen}
-              onToggleOpen={toggleRail}
-            />
+            {desktop && (
+              <Rail
+                sections={sections}
+                active={railPanel}
+                onSelect={setRailPanel}
+                open={railOpen}
+                onToggleOpen={toggleRail}
+              />
+            )}
 
             {/* min-w-0/min-h-0 are load-bearing: without them a scrolling
                 child grows this cell instead of scrolling inside it. */}
@@ -287,19 +305,25 @@ export function JobsDashboard() {
                     <div className={`${CARD} px-3 py-4 text-sm ${MUTED}`}>Nothing tracked yet.</div>
                   </div>
                 ) : (
-                  <Board
-                    lanes={board.lanes}
-                    now={now}
-                    allApps={apps}
-                    isCollapsed={(id) => collapsedLanes.includes(id)}
-                    onToggleLane={toggleLane}
-                    onChangeStatus={changeStatus}
-                    onAddFromReview={(prefill) => {
-                      setReviewPrefill(prefill);
-                      setManualAddKey((k) => k + 1);
-                      setAddOpen(true);
-                    }}
-                  />
+                  desktop ? (
+                    <Board
+                      lanes={board.lanes}
+                      now={now}
+                      allApps={apps}
+                      isCollapsed={(id) => collapsedLanes.includes(id)}
+                      onToggleLane={toggleLane}
+                      onChangeStatus={changeStatus}
+                      onAddFromReview={addFromReview}
+                    />
+                  ) : (
+                    <StackBoard
+                      lanes={board.lanes}
+                      now={now}
+                      allApps={apps}
+                      onChangeStatus={changeStatus}
+                      onAddFromReview={addFromReview}
+                    />
+                  )
                 )
               ) : (
                 <RailPanel
