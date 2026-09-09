@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { interviewPrepPrompt } from '@/lib/jobs/activity';
 import { STATUS_BADGE, STATUS_LABELS, gmailThreadUrl, relativeTime } from '@/lib/jobs/labels';
 import type { Application, ExcludedThread } from '@/lib/jobs/types';
 import { EditPanel } from './EditPanel';
@@ -76,6 +77,7 @@ export function ApplicationRow({
           {app.flags.needsReview && <Flag tone="info">Check</Flag>}
           {app.edited && <Flag tone="info">Edited</Flag>}
           <StatusPill status={app.status} />
+          {app.status === 'interviewing' && <PrepButton app={app} />}
           <WhyPopover app={app} />
           <button
             type="button"
@@ -119,6 +121,33 @@ export function ApplicationRow({
       </div>
       {open && <div id={panelId}><EditPanel app={app} allApps={allApps} /></div>}
     </li>
+  );
+}
+
+/**
+ * Hands an interview off to his existing `interview-prep` skill. A copied
+ * prompt rather than a link: that skill is a Claude Code invocation, so there
+ * is no URL to point at.
+ */
+function PrepButton({ app }: { app: Application }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(interviewPrepPrompt(app));
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 2000);
+        } catch {
+          // Clipboard can be blocked; the popover still shows the prompt.
+        }
+      }}
+      title="Copy a prompt to paste into Claude Code"
+      className="rounded-md border border-violet-300 px-2 py-1 text-xs font-medium text-violet-700 transition hover:bg-violet-50 dark:border-violet-800 dark:text-violet-300 dark:hover:bg-violet-950"
+    >
+      {copied ? 'Copied' : 'Prep'}
+    </button>
   );
 }
 

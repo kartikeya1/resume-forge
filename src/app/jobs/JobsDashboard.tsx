@@ -4,18 +4,23 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMounted } from '@/lib/useMounted';
 import { useTheme } from '@/lib/useTheme';
 import { buildApplications } from '@/lib/jobs';
+import { summariseActivity } from '@/lib/jobs/activity';
 import { downloadCsv } from '@/lib/jobs/csv';
+import { buildLabelPlan, threadLabelsFromSnapshot } from '@/lib/jobs/labelPlan';
 import { CLOSED_STATUSES, STATUS_BLURBS, STATUS_LABELS, STATUS_ORDER, relativeTime } from '@/lib/jobs/labels';
 import { useNow } from '@/lib/jobs/useNow';
 import { useOverridesStore } from '@/lib/jobs/overridesStore';
+import { useSettingsStore } from '@/lib/jobs/settingsStore';
 import { useSnapshot } from '@/lib/jobs/useSnapshot';
 import type { Application, JobStatus } from '@/lib/jobs/types';
 import { reconcileOverrides } from '@/lib/jobs';
 import { needsYouReason } from '@/lib/jobs/needsYou';
 import { ApplicationRow, CARD, KpiTile, MUTED, TEXT, ThreadRow } from './components/parts';
 import { BTN, ConnectPanel } from './components/ConnectPanel';
+import { GmailSyncPanel } from './components/GmailSyncPanel';
 import { ManualAddForm } from './components/ManualAddForm';
 import { ReviewDrawer } from './components/ReviewDrawer';
+import { SettingsPanel } from './components/SettingsPanel';
 
 /** Beyond this the dashboard is probably lying, so say so loudly. */
 const STALE_HOURS = 36;
@@ -35,6 +40,7 @@ export function JobsDashboard() {
 
   const overrides = useOverridesStore((st) => st.overrides);
   const replaceOverrides = useOverridesStore((st) => st.replaceOverrides);
+  const settings = useSettingsStore((st) => st.settings);
 
   // Deliberately derived on every load rather than cached, so a classifier fix
   // applies to an existing snapshot the moment it deploys. It also genuinely
@@ -42,8 +48,8 @@ export function JobsDashboard() {
   // re-running on the minute tick is correct, not waste. The pipeline is pure
   // and sub-millisecond at this size.
   const result = useMemo(
-    () => (s.snapshot ? buildApplications(s.snapshot, { now, overrides }) : null),
-    [s.snapshot, now, overrides]
+    () => (s.snapshot ? buildApplications(s.snapshot, { now, overrides, settings }) : null),
+    [s.snapshot, now, overrides, settings]
   );
 
   // Re-key any override whose application id changed because a fresh snapshot
@@ -85,9 +91,23 @@ export function JobsDashboard() {
   const stale = generatedAt !== null && now - generatedAt > STALE_HOURS * 3600_000;
   const apps = (result?.applications ?? []).filter((a) => !a.archived);
   const needsYou = apps
-    .map((a) => ({ app: a, reason: needsYouReason(a, now) }))
+    .map((a) => ({ app: a, reason: needsYouReason(a, now, settings) }))
     .filter((x): x is { app: Application; reason: string } => !!x.reason);
   const live = apps.filter((a) => !CLOSED_STATUSES.has(a.status));
+  const activity = summariseActivity(apps, settings.applyNudgeDays, now);
+
+  // Built from exactly the applications and "Needs you" set rendered above,
+  // so the exported plan can never disagree with what is on screen.
+  const labelPlan =
+    result && s.snapshot
+      ? buildLabelPlan({
+          applications: apps,
+          threadLabels: threadLabelsFromSnapshot(s.snapshot.threads),
+          needsYouIds: new Set(needsYou.map((n) => n.app.id)),
+          snapshotGeneratedAt: s.snapshot.generatedAt,
+          now,
+        })
+      : null;
 
   const grouped = STATUS_ORDER.map((status) => ({
     status,
@@ -160,6 +180,17 @@ export function JobsDashboard() {
               <KpiTile label="Tracked" value={apps.length} />
             </section>
 
+            {activity.nudge && (
+              <p role="status" className="mb-5 rounded-md bg-neutral-200 px-3 py-2 text-sm text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200">
+                No new application in{' '}
+                <strong className="tabular-nums">{activity.daysSinceLastApplication} days</strong>
+                {activity.lastApplicationCompany ? ` - the last one was ${activity.lastApplicationCompany}.` : '.'}{' '}
+                <span className={MUTED}>
+                  {activity.appliedLast30} in the last 30 days.
+                </span>
+              </p>
+            )}
+
             {/* The whole reason this page exists. */}
             <section aria-labelledby="needs-you" className="mb-6">
               <h2 id="needs-you" className="mb-2 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
@@ -209,6 +240,18 @@ export function JobsDashboard() {
               <button type="button" className={BTN} onClick={() => void s.disconnect()}>
                 Disconnect file
               </button>
+            </div>
+
+            <div className="mt-3 space-y-3">
+              {labelPlan && (
+                <GmailSyncPanel
+                  labelPlan={labelPlan}
+                  applications={apps}
+                  followUpStaleDays={settings.interviewSilenceDays}
+                  now={now}
+                />
+              )}
+              <SettingsPanel />
             </div>
 
             {result && (

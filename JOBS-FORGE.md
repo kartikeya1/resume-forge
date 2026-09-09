@@ -49,8 +49,11 @@ These are not style preferences. Each one has a failure behind it.
    scanned. Without it the page cannot tell "no rejection yet" from "the agent
    did not look that far back", and it would report silence as being ghosted.
 
-4. **Read-only against Gmail.** No labels, no archiving, no replies, no drafts.
-   Gmail write-back is a later phase and needs the user's explicit go-ahead.
+4. **Read-only against Gmail during a refresh.** Gathering mail and writing the
+   snapshot never labels, archives, replies, or drafts. Writing is a separate,
+   explicitly-requested job with its own procedure - see section 8 (labels) and
+   section 9 (drafts). Do not blend the two: never label something while you
+   happen to be refreshing.
 
 5. **Never guess a rejection.** If a subject is ambiguous ("Thank you for your
    interest in X"), read the body. If the body does not clearly say no, do not
@@ -286,7 +289,110 @@ longer) window and fresh judgment on every thread.
 
 ---
 
-## 8. Extending the rules
+## 8. Gmail write-back (Phase 2)
+
+**Read this whole section before touching a label. This is the only part of
+Jobs Forge that writes to a mailbox with ~181,000 messages in it.**
+
+You do not decide what to label. The dashboard decides, deterministically and
+under test, and exports a plan. You execute the plan. That split is the whole
+safety design - do not "improve" on it by labelling things the plan does not
+mention.
+
+### What makes this safe
+
+1. **Namespacing.** Every label is under `JobsForge/`. Nothing in a plan can
+   name one of his real labels (`axis-office-visit`, `paytm-office-visit`,
+   `CC Rewards`, `Amit Thapliyal`, `Notes`). A plan's `remove` list is asserted
+   in tests to contain only `JobsForge/` labels.
+2. **Complete undo.** Deleting the five `JobsForge/*` labels removes them from
+   every thread and touches nothing else. That is the revert - there is no need
+   to reconstruct prior state.
+3. **Noise is never labelled.** Only threads that made it into an application
+   appear in a plan, so a misclassified newsletter is ignored rather than
+   tagged.
+4. **Idempotency.** Re-running a plan is a no-op. An empty plan is the correct
+   output on a second run, and is the signal that Gmail is already in sync.
+
+### The five labels
+
+| Label | Meaning |
+|---|---|
+| `JobsForge/Needs-You` | Blocked on him, or a person is waiting on a reply |
+| `JobsForge/Interviewing` | Interview scheduled or done, awaiting an outcome |
+| `JobsForge/Active` | Live, submitted, nothing needed right now |
+| `JobsForge/Lapsed` | He stopped responding; recoverable |
+| `JobsForge/Closed` | Rejected, withdrawn, role closed, or gone quiet for good |
+
+They are **mutually exclusive** - a thread carries exactly one, which is what
+makes the Gmail sidebar counts trustworthy. Five rather than one-per-status
+because Gmail's sidebar becomes unusable past a handful, and the dashboard is
+already the place for the full eleven-status detail.
+
+### Procedure
+
+1. **He exports the plan.** Dashboard → *Gmail sync* → *Export label plan*,
+   which writes `~/Downloads/jobs-forge-label-plan.json`. He has already seen
+   the dry-run table on screen before doing this.
+2. **Read the plan.** Check `snapshotGeneratedAt` against the snapshot you
+   last wrote. **If the plan is older than the current snapshot, stop and say
+   so** - it was computed from stale state and would fight the next refresh.
+3. **Show him the summary and get a clear yes.** Number of threads changing,
+   and the per-label counts. Do not proceed on silence or on a vague
+   "sounds good" to some other question.
+4. **Ensure the labels exist.** `list_labels`, then `create_label` for any of
+   the five that are missing. Build a name → id map: **`label_thread` takes
+   label IDs, not names**, and every label in the plan is a name.
+5. **Apply, thread by thread.** For each entry in `changes`: `label_thread`
+   with the ids for `add`, then `unlabel_thread` with the ids for `remove`.
+   Adds before removes, so a thread is never briefly unlabelled.
+6. **Report what actually happened**, including any failures. Do not claim
+   success for threads you did not confirm.
+
+### Hard rules for this section
+
+- **Never `unlabel_thread` a label that is not in the plan's `remove` list.**
+- **Never `delete_label` anything except a `JobsForge/*` label**, and only when
+  he explicitly asks you to undo the whole feature.
+- **Never label a thread that does not appear in `changes`.** If you think a
+  thread is mislabelled, say so - do not act on it. The fix is a classifier
+  rule or an agent hint, not a manual label.
+- **Never `trash_message`, `trash_thread`, `mark_thread_spam`, or archive
+  anything.** Labelling is the entire remit of this phase.
+- If the mapping in step 4 comes back ambiguous (two labels with similar
+  names), stop and ask.
+
+### Undoing it
+
+> `delete_label` on each of the five `JobsForge/*` labels.
+
+That is the complete revert. It cannot affect any other label, and it is worth
+telling him this up front - it is what makes trying the feature cheap.
+
+---
+
+## 9. Follow-up drafts (Phase 2)
+
+The dashboard also exports `~/Downloads/jobs-forge-followup-plan.json` for
+applications that have gone quiet where **a real human is on the other end**
+(it deliberately never chases a `no-reply@` ATS address).
+
+**The plan's own `instruction` field is a hard rule, and it is this: create
+Gmail DRAFTS only. Never send.** An automated follow-up to a real recruiter is
+irreversible and carries his reputation, not yours.
+
+1. Read the plan. Each draft has `to`, `threadId`, `subject`, `body`.
+2. Use `create_draft`, replying within `threadId` so it threads rather than
+   arriving cold.
+3. **Stop.** Tell him the drafts are ready. He edits and sends them himself.
+4. If a draft has `"to": null`, there is no human address - skip it and say so.
+
+The bodies are generated, so they are a competent starting point rather than
+finished prose. Do not talk him out of editing them.
+
+---
+
+## 10. Extending the rules
 
 When a real sender is misclassified, fix the data table rather than special-casing:
 
@@ -308,7 +414,7 @@ npm run typecheck && npm run lint && npm test && npm run build
 
 ---
 
-## 9. First-time setup (user, once)
+## 11. First-time setup (user, once)
 
 1. `npm run dev`, open <http://localhost:3000/jobs> (or the deployed `/jobs`).
 2. **Choose file** → pick `~/Downloads/jobs-forge-snapshot.json`.

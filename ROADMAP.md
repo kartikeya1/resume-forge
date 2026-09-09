@@ -4,7 +4,7 @@ This document tracks **what has been built** and **what is planned** across the 
 
 **Legend:** ✅ done · 🔜 planned · 💭 needs a product/infra decision before starting
 
-_Last verified: 2026-09-09 · Pass 2.5 + Jobs Forge Phase 0-1 shipped · 359 tests, typecheck, lint and production build all green._
+_Last verified: 2026-09-09 · Pass 2.5 + Jobs Forge Phase 0-2 shipped · 427 tests, typecheck, lint and production build all green._
 
 ### Phase mapping
 
@@ -20,8 +20,8 @@ Kartikeya's repos, so "Phase 2" means the same thing everywhere:
 | **P4** features | product work, no outside dependency | Pass 3-local, Pass 5 |
 | **P5** decision-gated | needs a provider/key/budget call | Pass 3-cloud, Pass 4-AI |
 
-**Execution order recommendation:** Pass 2.5 is complete and Jobs Forge Phase 0 has shipped, so
-**Pass 3-local is next.** The deterministic core now has 323 tests and CI behind it, which is what
+**Execution order recommendation:** Pass 2.5 is complete and Jobs Forge Phases 0-2 have shipped, so
+**Pass 3-local is next.** The deterministic core now has 427 tests and CI behind it, which is what
 the later passes needed in order to change scoring safely.
 
 ---
@@ -209,9 +209,17 @@ wired in: when a fresh snapshot resolves something the rules could not before, h
 application to its new id instead of silently detaching. 359 tests, fixtures verbatim from the real
 mailbox.
 
-🔜 **Phase 2** Gmail write-back labels, staleness SLAs, follow-up drafts · **Phase 3** encrypted
-snapshot for phone access · **Phase 4** funnel analytics · **Phase 5** link applications to the resume
-version sent.
+✅ **Phase 2 - shipped.** Gmail label write-back as a *reviewable plan file* rather than a direct
+write: the dashboard has no backend, so it exports `jobs-forge-label-plan.json` and an agent applies
+it after a dry-run the user reads on screen. Five mutually-exclusive `JobsForge/*` labels, so the
+blast radius is bounded by construction and deleting those five labels is a complete undo. Plus
+user-tunable staleness thresholds (`settings.ts`, every status re-derives live), follow-up drafts for
+applications where a real human is on the other end (drafts only, never sent), a
+"no application in N days" momentum nudge, and an interview-prep hand-off that copies a prompt for
+the `interview-prep` skill.
+
+🔜 **Phase 3** encrypted snapshot for phone access · **Phase 4** funnel analytics · **Phase 5** link
+applications to the resume version sent.
 
 Two things Phase 0 deliberately does *not* do, and should not be "fixed" without a decision:
 - **It never guesses.** An application whose company cannot be determined shows as unknown and lands

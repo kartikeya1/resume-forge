@@ -8,6 +8,7 @@ import { buildContext, classifyThread, type Classification } from './classify';
 import { applicationKey, dedupeEvents, groupCandidates, type CorrelateOptions, type ThreadCandidate } from './correlate';
 import { extractFromThread, parsedRoleOf } from './extract';
 import { companyKey } from './normalize';
+import { DEFAULT_SETTINGS, type JobsSettings } from './settings';
 import { deriveStatus } from './status';
 import type {
   AgentHint,
@@ -84,11 +85,14 @@ export interface BuildOptions {
   now?: number;
   overrides?: UserOverrides;
   softJoinWindowDays?: number;
+  /** User-tuned thresholds; falls back to DEFAULT_SETTINGS. */
+  settings?: JobsSettings;
 }
 
 export function buildApplications(snapshot: JobsSnapshot, opts: BuildOptions = {}): BuildResult {
   const now = opts.now ?? Date.now();
   const overrides = opts.overrides ?? emptyOverrides();
+  const settings = opts.settings ?? DEFAULT_SETTINGS;
   const windowSince = Date.parse(snapshot.window.since);
 
   const hints = snapshot.hints ?? [];
@@ -187,6 +191,7 @@ export function buildApplications(snapshot: JobsSnapshot, opts: BuildOptions = {
       now,
       needsReview,
       windowSince: Number.isNaN(windowSince) ? undefined : windowSince,
+      cfg: settings,
     });
 
     const id = applicationKey({
@@ -316,4 +321,6 @@ export * from './types';
 export { parseSnapshot, parseSnapshotText, InvalidSnapshotError, SNAPSHOT_KIND, SNAPSHOT_VERSION } from './snapshot';
 export type { JobsSnapshot } from './snapshot';
 export { STATUS_CONFIG, deriveStatus, deriveFlags } from './status';
+export { DEFAULT_SETTINGS, coerceSettings, isCustomised, SETTING_KEYS, SETTING_LABELS, SETTING_UNITS, settingLimits } from './settings';
+export type { JobsSettings } from './settings';
 export { reconcileOverrides } from './correlate';

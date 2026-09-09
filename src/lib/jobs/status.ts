@@ -4,20 +4,16 @@
 // the UI can explain itself. `now` is always injected - nothing here reads the
 // clock, which is what makes the whole pipeline testable.
 
+import { DEFAULT_SETTINGS, type JobsSettings } from './settings';
 import { GENERIC_LOCALPARTS, matchVendor } from './vendors';
 import { senderLocalpart } from './normalize';
 import type { AppEvent, AppFlags, EventType, StatusResult } from './types';
 
-export const STATUS_CONFIG = {
-  /** Silence beyond this and they have dropped it. */
-  ghostDays: 45,
-  staleWarnDays: 14,
-  /** Ignored nudges older than this and he has dropped it. */
-  nudgeLapseDays: 14,
-  interviewMissedGraceHours: 12,
-} as const;
+// Re-exported for the tests and callers that predate the settings store.
+// DEFAULT_SETTINGS is the single source of truth for these numbers now.
+export const STATUS_CONFIG = DEFAULT_SETTINGS;
 
-export type StatusConfig = typeof STATUS_CONFIG;
+export type StatusConfig = JobsSettings;
 
 const DAY = 24 * 3600_000;
 
