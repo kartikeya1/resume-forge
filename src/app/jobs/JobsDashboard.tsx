@@ -9,16 +9,17 @@ import { composeBoard, type ChipFilter } from '@/lib/jobs/board';
 import { useBoardStore } from '@/lib/jobs/boardStore';
 import { downloadCsv } from '@/lib/jobs/csv';
 import { buildLabelPlan, threadLabelsFromSnapshot } from '@/lib/jobs/labelPlan';
-import { CLOSED_STATUSES } from '@/lib/jobs/labels';
+import { CLOSED_STATUSES, STATUS_LABELS } from '@/lib/jobs/labels';
 import { useNow } from '@/lib/jobs/useNow';
 import { useOverridesStore } from '@/lib/jobs/overridesStore';
 import { isCustomised } from '@/lib/jobs/settings';
 import { useSettingsStore } from '@/lib/jobs/settingsStore';
 import { useSnapshot } from '@/lib/jobs/useSnapshot';
 import { reconcileOverrides } from '@/lib/jobs';
-import { ApplicationRow, ThreadRow } from './components/parts';
+import type { Application, JobStatus } from '@/lib/jobs/types';
 import { CARD, MUTED } from './components/ui';
 import { AnalyticsPanel } from './components/AnalyticsPanel';
+import { Board } from './components/Board';
 import { Banners } from './components/Banners';
 import { ConnectPanel } from './components/ConnectPanel';
 import { GmailSyncPanel } from './components/GmailSyncPanel';
@@ -26,7 +27,6 @@ import { ManualAddForm } from './components/ManualAddForm';
 import { PublishPanel } from './components/PublishPanel';
 import { Rail, type RailSection } from './components/Rail';
 import { RailPanel } from './components/RailPanel';
-import { ReviewDrawer } from './components/ReviewDrawer';
 import { Ribbon } from './components/Ribbon';
 import { SettingsPanel } from './components/SettingsPanel';
 import { StatusBar } from './components/StatusBar';
@@ -48,6 +48,8 @@ export function JobsDashboard() {
   const setRailPanel = useBoardStore((st) => st.setRailPanel);
   const setShowClosed = useBoardStore((st) => st.setShowClosed);
   const setShowFiltered = useBoardStore((st) => st.setShowFiltered);
+  const collapsedLanes = useBoardStore((st) => st.collapsedLanes);
+  const toggleLane = useBoardStore((st) => st.toggleLane);
 
   // Ephemeral by intent: a filter is a momentary act of looking. Persisting it
   // means opening the app to 3 of 40 applications with no memory of why.
@@ -57,11 +59,17 @@ export function JobsDashboard() {
   // than lifting its internal company/role state up here.
   const [reviewPrefill, setReviewPrefill] = useState<{ company: string; role?: string } | null>(null);
   const [manualAddKey, setManualAddKey] = useState(0);
+  // Announced on a status change. A card re-parents into a different lane the
+  // instant you pick a status, and Menu.close() deliberately does not move
+  // focus, so without this the only feedback is a card vanishing from under
+  // the pointer.
+  const [announcement, setAnnouncement] = useState('');
 
   const now = useNow();
 
   const overrides = useOverridesStore((st) => st.overrides);
   const replaceOverrides = useOverridesStore((st) => st.replaceOverrides);
+  const setStatusOverride = useOverridesStore((st) => st.setStatus);
   const settings = useSettingsStore((st) => st.settings);
 
   // Deliberately derived on every load rather than cached, so a classifier fix
@@ -159,6 +167,16 @@ export function JobsDashboard() {
   ];
 
   const closedCount = apps.filter((a) => CLOSED_STATUSES.has(a.status)).length;
+
+  const changeStatus = (app: Application, next: JobStatus) => {
+    setStatusOverride(app.id, next);
+    // Moving a card to a closed status sends it to a lane that only exists
+    // while "Show closed" is on, so the card would visibly disappear the
+    // moment you acted on it - which reads as data loss rather than as a
+    // successful move. Reveal the destination instead.
+    if (CLOSED_STATUSES.has(next) && !showClosed) setShowClosed(true);
+    setAnnouncement(`Moved ${app.company ?? 'Unknown company'} to ${STATUS_LABELS[next]}.`);
+  };
 
   return (
     // The .dark class lives here rather than on <html> - this route owns its
@@ -259,73 +277,25 @@ export function JobsDashboard() {
               />
 
               {railPanel === 'board' ? (
-                <div
-                  id="rail-panel-board"
-                  role="tabpanel"
-                  aria-label="Board"
-                  className="min-h-0 min-w-0 flex-1 overflow-auto px-3 py-3"
-                >
-                  {/* Phase 2 turns these into horizontal lanes. For now the
-                      composed lanes render as the stacked sections they always
-                      did - what changed in this phase is the shell around
-                      them, which is what made the page unusable. */}
-                  {board.lanes
-                    // The review lane is composed and tested, but ReviewDrawer
-                    // still renders these threads below with its own keyboard
-                    // model and add flow. Rendering both would show the same
-                    // threads twice; Phase 2 folds the drawer into the lane.
-                    .filter((l) => l.kind !== 'review')
-                    .filter((l) => l.items.length > 0 || l.threads.length > 0)
-                    .map((l) => (
-                      <section key={l.id} aria-labelledby={`lane-${l.id}`} className="mb-5">
-                        <h2
-                          id={`lane-${l.id}`}
-                          className="mb-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100"
-                        >
-                          {l.title}{' '}
-                          <span className="font-normal tabular-nums text-neutral-400">{l.count}</span>
-                        </h2>
-                        <p className={`mb-2 text-xs ${MUTED}`}>{l.blurb}</p>
-                        <div
-                          className={
-                            l.kind === 'needs_you'
-                              ? 'overflow-hidden rounded-lg border-2 border-amber-300 bg-white dark:border-amber-800 dark:bg-neutral-800'
-                              : `${CARD} overflow-hidden`
-                          }
-                        >
-                          <ul>
-                            {l.items.map((i) => (
-                              <ApplicationRow
-                                key={i.app.id}
-                                app={i.app}
-                                now={now}
-                                reason={l.kind === 'needs_you' ? i.needsYouReason : undefined}
-                                allApps={apps}
-                              />
-                            ))}
-                            {l.threads.map((t) => (
-                              <ThreadRow key={t.threadId} t={t} />
-                            ))}
-                          </ul>
-                        </div>
-                      </section>
-                    ))}
-
-                  {board.counts.tracked === 0 && (
+                board.counts.tracked === 0 ? (
+                  <div className="px-3 py-3">
                     <div className={`${CARD} px-3 py-4 text-sm ${MUTED}`}>Nothing tracked yet.</div>
-                  )}
-
-                  {result && (
-                    <ReviewDrawer
-                      threads={result.review}
-                      onAdd={(prefill) => {
-                        setReviewPrefill(prefill);
-                        setManualAddKey((k) => k + 1);
-                        setAddOpen(true);
-                      }}
-                    />
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <Board
+                    lanes={board.lanes}
+                    now={now}
+                    allApps={apps}
+                    isCollapsed={(id) => collapsedLanes.includes(id)}
+                    onToggleLane={toggleLane}
+                    onChangeStatus={changeStatus}
+                    onAddFromReview={(prefill) => {
+                      setReviewPrefill(prefill);
+                      setManualAddKey((k) => k + 1);
+                      setAddOpen(true);
+                    }}
+                  />
+                )
               ) : (
                 <RailPanel
                   id={railPanel}
@@ -347,6 +317,12 @@ export function JobsDashboard() {
               )}
             </main>
           </div>
+
+          {/* The one live region on the page. Announces a card moving lanes,
+              which is otherwise a silent re-parent. */}
+          <p role="status" aria-live="polite" className="sr-only">
+            {announcement}
+          </p>
 
           <StatusBar
             fileName={s.meta?.name ?? 'imported file'}
