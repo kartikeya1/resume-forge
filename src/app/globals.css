@@ -22,7 +22,11 @@ body {
   body {
     background: #ffffff !important;
   }
-  body * {
+  /* Scoped to pages that actually have a resume on them. Unscoped, this hid
+     everything on every route, so printing /jobs produced a blank sheet -
+     the board is a legitimate thing to want on paper before an interview.
+     `body:has(#resume-paper)` leaves the resume print path byte-identical. */
+  body:has(#resume-paper) * {
     visibility: hidden;
   }
   #resume-paper,

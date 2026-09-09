@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { LaneItem } from '@/lib/jobs/board';
 import { gmailThreadUrl, relativeTime } from '@/lib/jobs/labels';
 import type { Application, JobStatus } from '@/lib/jobs/types';
@@ -29,6 +29,8 @@ export function AppCard({
   allApps,
   inNeedsYouLane,
   onChangeStatus,
+  focusOnMount,
+  onFocusHandled,
 }: {
   item: LaneItem;
   now: number;
@@ -36,16 +38,34 @@ export function AppCard({
   /** True for the pinned lane's copy of a card that also appears in its status lane. */
   inNeedsYouLane?: boolean;
   onChangeStatus?: (app: Application, next: JobStatus) => void;
+  /** True for the card that just changed status - see the note below. */
+  focusOnMount?: boolean;
+  onFocusHandled?: () => void;
 }) {
   const { app, needsYouReason } = item;
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const liRef = useRef<HTMLLIElement>(null);
   const company = app.company ?? 'Unknown company';
+
+  // Changing a status re-parents this card into a different lane, which
+  // unmounts the dropdown trigger that had focus - and Menu.close()
+  // deliberately does not move focus, so it fell to <body> and a keyboard
+  // user lost their place entirely. Take it back on the card itself, and
+  // scroll it into view, so the move lands somewhere legible.
+  useEffect(() => {
+    if (!focusOnMount) return;
+    liRef.current?.focus({ preventScroll: true });
+    liRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    onFocusHandled?.();
+  }, [focusOnMount, onFocusHandled]);
   const href = app.threadIds.length ? gmailThreadUrl(app.threadIds[0]) : undefined;
 
   return (
     <li
-      className={`border-t border-neutral-100 px-2.5 py-2 first:border-t-0 dark:border-neutral-700 ${
+      ref={liRef}
+      tabIndex={-1}
+      className={`border-t border-neutral-100 px-2.5 py-2 outline-none first:border-t-0 focus-visible:ring-2 focus-visible:ring-neutral-400 dark:border-neutral-700 ${
         // The pinned lane's copy is marked so the two renderings of the same
         // application are visibly the same card rather than looking like two
         // separate applications with contradictory sublines.

@@ -6,7 +6,7 @@ import type { Application, JobStatus } from '@/lib/jobs/types';
 import { AppCard } from './AppCard';
 import { ReviewHelp, ReviewList } from './ReviewList';
 import { ThreadRow } from './parts';
-import { CARD, MUTED } from './ui';
+import { CARD, COUNT, MUTED } from './ui';
 
 /**
  * The board below the `md` breakpoint: one lane at a time, chosen from a
@@ -28,12 +28,17 @@ export function StackBoard({
   allApps,
   onAddFromReview,
   onChangeStatus,
+  focusAppId,
+  onFocusHandled,
 }: {
   lanes: LaneModel[];
   now: number;
   allApps: Application[];
   onAddFromReview: (prefill: { company: string; role?: string }) => void;
   onChangeStatus: (app: Application, next: JobStatus) => void;
+  /** The application that just changed status, so its card can take focus. */
+  focusAppId?: string | null;
+  onFocusHandled?: () => void;
 }) {
   // Defaults to Needs you - the lane the whole page exists for.
   const [selected, setSelected] = useState<string>(lanes[0]?.id ?? '');
@@ -101,7 +106,10 @@ export function StackBoard({
               }`}
             >
               <span aria-hidden="true">{l.title}</span>
-              <span aria-hidden="true" className="tabular-nums opacity-70">
+              {/* No opacity dimming: the count is information, and 70% of
+                  neutral-600 on white measures about 3:1. The label coming
+                  first already carries the hierarchy. */}
+              <span aria-hidden="true" className="tabular-nums">
                 {l.count}
               </span>
             </button>
@@ -118,7 +126,7 @@ export function StackBoard({
       >
         <h2 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
           {active.title}{' '}
-          <span className="font-normal tabular-nums text-neutral-400">{active.count}</span>
+          <span className={`font-normal tabular-nums ${COUNT}`}>{active.count}</span>
         </h2>
         <p className={`mt-0.5 text-xs leading-snug ${MUTED}`}>{active.blurb}</p>
         {active.kind === 'review' && (
@@ -139,6 +147,8 @@ export function StackBoard({
               allApps={allApps}
               onAddFromReview={onAddFromReview}
               onChangeStatus={onChangeStatus}
+              focusAppId={focusAppId}
+              onFocusHandled={onFocusHandled}
             />
           </div>
         )}
@@ -153,12 +163,16 @@ function StackBody({
   allApps,
   onAddFromReview,
   onChangeStatus,
+  focusAppId,
+  onFocusHandled,
 }: {
   lane: LaneModel;
   now: number;
   allApps: Application[];
   onAddFromReview: (prefill: { company: string; role?: string }) => void;
   onChangeStatus: (app: Application, next: JobStatus) => void;
+  focusAppId?: string | null;
+  onFocusHandled?: () => void;
 }) {
   if (lane.kind === 'review') {
     return <ReviewList threads={lane.threads} onAdd={onAddFromReview} />;
@@ -182,6 +196,8 @@ function StackBody({
           allApps={allApps}
           inNeedsYouLane={lane.kind === 'needs_you'}
           onChangeStatus={onChangeStatus}
+          focusOnMount={focusAppId === item.app.id && lane.kind !== 'needs_you'}
+          onFocusHandled={onFocusHandled}
         />
       ))}
     </ul>

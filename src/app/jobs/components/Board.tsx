@@ -22,6 +22,8 @@ export function Board({
   onToggleLane,
   onAddFromReview,
   onChangeStatus,
+  focusAppId,
+  onFocusHandled,
 }: {
   lanes: LaneModel[];
   now: number;
@@ -30,6 +32,9 @@ export function Board({
   onToggleLane: (id: string) => void;
   onAddFromReview: (prefill: { company: string; role?: string }) => void;
   onChangeStatus: (app: Application, next: JobStatus) => void;
+  /** The application that just changed status, so its card can take focus. */
+  focusAppId?: string | null;
+  onFocusHandled?: () => void;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -121,7 +126,7 @@ export function Board({
       // browser Back, which matters most in the installed PWA. snap-proximity
       // rather than mandatory: mandatory fights a trackpad and hijacks
       // scrollIntoView when a card inside a lane takes focus.
-      className="flex min-h-0 min-w-0 flex-1 snap-x snap-proximity gap-3 overflow-x-auto overscroll-x-contain px-3 py-3"
+      className="flex min-h-0 min-w-0 flex-1 snap-x snap-proximity gap-3 overflow-x-auto overscroll-x-contain px-3 py-3 print:min-h-0 print:flex-wrap print:overflow-visible"
     >
       {lanes.map((lane) => {
         const collapsed = isCollapsed(lane.id);
@@ -145,6 +150,8 @@ export function Board({
               allApps={allApps}
               onAddFromReview={onAddFromReview}
               onChangeStatus={onChangeStatus}
+              focusAppId={focusAppId}
+              onFocusHandled={onFocusHandled}
             />
           </Lane>
         );
@@ -159,12 +166,16 @@ function LaneBody({
   allApps,
   onAddFromReview,
   onChangeStatus,
+  focusAppId,
+  onFocusHandled,
 }: {
   lane: LaneModel;
   now: number;
   allApps: Application[];
   onAddFromReview: (prefill: { company: string; role?: string }) => void;
   onChangeStatus: (app: Application, next: JobStatus) => void;
+  focusAppId?: string | null;
+  onFocusHandled?: () => void;
 }) {
   if (lane.kind === 'review') {
     // ReviewList renders its own <ul role="listbox">, so it replaces the
@@ -190,6 +201,8 @@ function LaneBody({
           allApps={allApps}
           inNeedsYouLane={lane.kind === 'needs_you'}
           onChangeStatus={onChangeStatus}
+          focusOnMount={focusAppId === item.app.id && lane.kind !== 'needs_you'}
+          onFocusHandled={onFocusHandled}
         />
       ))}
     </ul>

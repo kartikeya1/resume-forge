@@ -2,7 +2,7 @@
 
 import { useId } from 'react';
 import type { Lane as LaneModel } from '@/lib/jobs/board';
-import { LANE, LANE_COLLAPSED, LANE_EMPTY, MUTED } from './ui';
+import { COUNT, LANE, LANE_COLLAPSED, LANE_EMPTY, MUTED } from './ui';
 
 /**
  * One swim lane: a header that never scrolls, and a body that scrolls on its
@@ -54,7 +54,7 @@ export function Lane({
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-xs font-semibold text-neutral-900 dark:text-neutral-100">
             {lane.title}{' '}
-            <span className="font-normal tabular-nums text-neutral-400">{lane.count}</span>
+            <span className={`font-normal tabular-nums ${COUNT}`}>{lane.count}</span>
           </h2>
           {/* Populated lanes show the blurb; an empty lane is only 152px wide,
               so it carries the same text as a tooltip and an accessible
@@ -89,7 +89,7 @@ export function Lane({
       {!empty && (
         <div
           id={bodyId}
-          className="min-h-0 flex-1 overflow-y-auto border-t border-neutral-100 dark:border-neutral-700"
+          className="min-h-0 flex-1 overflow-y-auto border-t border-neutral-100 print:overflow-visible dark:border-neutral-700"
         >
           {children}
         </div>

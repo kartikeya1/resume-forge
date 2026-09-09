@@ -13,6 +13,15 @@ export const TEXT = 'text-neutral-700 dark:text-neutral-200';
 export const MUTED = 'text-neutral-500 dark:text-neutral-400';
 export const CHIP = 'rounded-full px-2 py-0.5 text-[11px] font-medium';
 
+/**
+ * A lane count. Deliberately darker than MUTED: a count is information, not
+ * decoration, and an empty lane sits on the page background rather than on a
+ * white card, which costs about 0.4 of a contrast ratio. Measured - MUTED on
+ * the page ground came out at 4.35:1, just under the 4.5:1 bar, while the
+ * same token on a card passed at 4.74:1. This clears both.
+ */
+export const COUNT = 'text-neutral-600 dark:text-neutral-300';
+
 export const BTN =
   'inline-flex items-center gap-1.5 rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800';
 export const BTN_PRIMARY =
@@ -30,7 +39,7 @@ export const RIBBON_BTN =
 
 /** A populated swim lane. Width is fixed so lanes stay scannable while scrolling. */
 export const LANE =
-  'flex w-[300px] shrink-0 snap-start flex-col rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800';
+  'flex w-[300px] shrink-0 snap-start flex-col rounded-lg border border-neutral-200 bg-white print:w-full print:break-inside-avoid dark:border-neutral-700 dark:bg-neutral-800';
 
 /**
  * An empty lane: narrower and dashed, so it reads as "nothing here" without

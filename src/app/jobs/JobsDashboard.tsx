@@ -70,6 +70,8 @@ export function JobsDashboard() {
   // focus, so without this the only feedback is a card vanishing from under
   // the pointer.
   const [announcement, setAnnouncement] = useState('');
+  // The card that just changed status, so it can take focus in its new lane.
+  const [focusAppId, setFocusAppId] = useState<string | null>(null);
 
   const now = useNow();
 
@@ -188,6 +190,7 @@ export function JobsDashboard() {
     // successful move. Reveal the destination instead.
     if (CLOSED_STATUSES.has(next) && !showClosed) setShowClosed(true);
     setAnnouncement(`Moved ${app.company ?? 'Unknown company'} to ${STATUS_LABELS[next]}.`);
+    setFocusAppId(app.id);
   };
 
   return (
@@ -196,7 +199,7 @@ export function JobsDashboard() {
     // to document.body: it would render outside this class and come out
     // light. Menu is absolute-positioned for that reason.
     <div
-      className={`flex h-dvh flex-col overflow-hidden bg-neutral-100 dark:bg-neutral-950 ${
+      className={`flex h-dvh flex-col overflow-hidden bg-neutral-100 print:h-auto print:overflow-visible dark:bg-neutral-950 ${
         theme === 'dark' ? 'dark' : ''
       }`}
     >
@@ -314,6 +317,8 @@ export function JobsDashboard() {
                       onToggleLane={toggleLane}
                       onChangeStatus={changeStatus}
                       onAddFromReview={addFromReview}
+                      focusAppId={focusAppId}
+                      onFocusHandled={() => setFocusAppId(null)}
                     />
                   ) : (
                     <StackBoard
@@ -322,6 +327,8 @@ export function JobsDashboard() {
                       allApps={apps}
                       onChangeStatus={changeStatus}
                       onAddFromReview={addFromReview}
+                      focusAppId={focusAppId}
+                      onFocusHandled={() => setFocusAppId(null)}
                     />
                   )
                 )

@@ -82,7 +82,7 @@ export function Rail({
 
   return (
     <aside
-      className={`flex shrink-0 flex-col border-r border-neutral-200 bg-neutral-50 py-2 transition-[width] dark:border-neutral-700 dark:bg-neutral-900 ${
+      className={`flex shrink-0 flex-col border-r border-neutral-200 bg-neutral-50 py-2 transition-[width] print:hidden dark:border-neutral-700 dark:bg-neutral-900 ${
         open ? 'w-52' : 'w-12'
       }`}
     >
