@@ -4,7 +4,7 @@
 
 A web-based resume builder with a **live pageless preview**, a deterministic **ATS score**, and **job-description keyword matching** - built to help software engineering, product management, and MBA (sales/marketing) candidates tailor a clean, ATS-friendly resume.
 
-**Everything runs in your browser.** No account, no backend, no data leaves your machine - your work autosaves to `localStorage`, and you can export a portable save file whenever you like. If browser storage ever fills up, the app tells you autosave has stopped rather than losing edits quietly.
+**Everything runs in your browser.** No account, no backend, no data leaves your machine - your work autosaves to `localStorage`, and you can export a portable save file whenever you like. If browser storage ever fills up, the app tells you autosave has stopped rather than losing edits quietly. (The one exception is opt-in and explicit: Jobs Forge can publish an *encrypted* snapshot for phone access - see Privacy.)
 
 🔗 **Live:** https://resume-forge-two-pi.vercel.app
 
@@ -188,7 +188,29 @@ The one optional environment variable is **`NEXT_PUBLIC_SITE_URL`**. It sets the
 
 ## Privacy
 
-ResumeForge is fully client-side. Your resume and job descriptions never leave your browser - they live in `localStorage` and in any `.resume.json` file you choose to save. There is no server, no analytics, and no third-party data sharing.
+ResumeForge is fully client-side. Your resume and job descriptions never leave your browser - they
+live in `localStorage` and in any `.resume.json` file you choose to save. There is no server, no
+analytics, and no third-party data sharing.
+
+### Jobs Forge (`/jobs`)
+
+The job-application tracker at `/jobs` reads a snapshot of your own Gmail from a file on your disk
+via the File System Access API. That file is gitignored and never uploaded, so by default nothing
+about your job search leaves your machine either.
+
+There is exactly one way for it to leave, and it only happens if you ask for it: **Publish for
+phone** encrypts the snapshot in your browser (AES-256-GCM, key stretched with PBKDF2-SHA256 at
+600,000 rounds) and downloads the ciphertext for you to commit as `public/jobs-snapshot.enc`. Any
+device can then open `/jobs` and decrypt it with your passphrase.
+
+Be clear-eyed about what that trade is. This repo is public, so a published snapshot is
+world-readable ciphertext that anyone can attack offline, indefinitely, with no rate limit. Its only
+defence is the strength of your passphrase - which is why the publish button refuses anything short
+or predictable and asks for four or five unrelated words. The passphrase is never stored, never
+transmitted, and never shown to any agent; it is typed in the browser, used once, and discarded.
+
+If you would rather not make that trade, simply never publish. The desktop file-based path is
+unaffected and remains entirely local.
 
 <br>
 

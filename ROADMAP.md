@@ -4,7 +4,7 @@ This document tracks **what has been built** and **what is planned** across the 
 
 **Legend:** ✅ done · 🔜 planned · 💭 needs a product/infra decision before starting
 
-_Last verified: 2026-07-29 · Pass 2.5 shipped · 123 tests, typecheck, lint and production build all green._
+_Last verified: 2026-09-09 · Pass 2.5 + Jobs Forge Phase 0-4 shipped (Phase 5 scrapped) · 479 tests, typecheck, lint and production build all green._
 
 ### Phase mapping
 
@@ -20,9 +20,10 @@ Kartikeya's repos, so "Phase 2" means the same thing everywhere:
 | **P4** features | product work, no outside dependency | Pass 3-local, Pass 5 |
 | **P5** decision-gated | needs a provider/key/budget call | Pass 3-cloud, Pass 4-AI |
 
-**Execution order recommendation:** Pass 2.5 is complete, so **Pass 3-local is next.** The
-deterministic core now has 123 tests and CI behind it, which is what the later passes needed in
-order to change scoring safely.
+**Execution order recommendation:** Pass 2.5 is complete and Jobs Forge Phases 0-4 have shipped
+(Phase 5 was scrapped - see `JOBS-FORGE.md` §14), so **Pass 3-local is next.** The deterministic core
+now has 479 tests and CI behind it, which is what the later passes needed in order to change scoring
+safely.
 
 ---
 
@@ -183,6 +184,85 @@ Reliability polish so a generated resume is provably ATS-parseable.
 
 ---
 
+## Jobs Forge (`/jobs`)
+
+A separate route tracking the status of job applications, sourced from a Gmail snapshot the user's
+agent writes to `~/Downloads/jobs-forge-snapshot.json`. The page reads that file with the File System
+Access API, so **it changes none of the local-first constraints above**: no backend, no API routes,
+nothing uploaded, nothing committed. `/jobs` is `noindex`, absent from the sitemap, and disallowed in
+robots.txt; snapshots are gitignored because this repo is public.
+
+**`JOBS-FORGE.md` at the repo root is the agent runbook** - the queries to run, the snapshot schema,
+and the judgments the deterministic pipeline cannot make on its own. Read it before refreshing the
+dashboard.
+
+✅ **Phase 0 - shipped.** The classifier (`src/lib/jobs/`), thread correlation, the derived-status
+ladder, the "Needs you" strip, the review drawer, and the first 90-day backfill (34 applications
+across 71 threads).
+
+✅ **Phase 1 - shipped.** Correction UI (rename company/role, set status, notes, archive, `Reset to
+derived`), force-merge and force-split at the thread level, a manual "add application" for anything
+that never generated email (`src/lib/jobs/overrides.ts`, persisted via `overridesStore.ts`), a "why?"
+popover on every row exposing the status rule, field provenance, merge rule ids and per-thread
+classification trail, the review drawer promoted to keyboard-triaged inbox (arrow keys, `a` to add,
+`x` to dismiss), Gmail deep links, and CSV export. `reconcileOverrides` (built in Phase 0) is now
+wired in: when a fresh snapshot resolves something the rules could not before, hand edits follow the
+application to its new id instead of silently detaching. 359 tests, fixtures verbatim from the real
+mailbox.
+
+✅ **Phase 2 - shipped.** Gmail label write-back as a *reviewable plan file* rather than a direct
+write: the dashboard has no backend, so it exports `jobs-forge-label-plan.json` and an agent applies
+it after a dry-run the user reads on screen. Five mutually-exclusive `JobsForge/*` labels, so the
+blast radius is bounded by construction and deleting those five labels is a complete undo. Plus
+user-tunable staleness thresholds (`settings.ts`, every status re-derives live), follow-up drafts for
+applications where a real human is on the other end (drafts only, never sent), a
+"no application in N days" momentum nudge, and an interview-prep hand-off that copies a prompt for
+the `interview-prep` skill.
+
+✅ **Phase 3 - shipped.** Phone access, which was the known gap from Phase 0. *Publish for phone*
+encrypts the snapshot in the browser (AES-256-GCM, PBKDF2-SHA256 at 600,000 rounds) and downloads
+ciphertext to commit as `public/jobs-snapshot.enc`; any device then opens `/jobs` and unlocks with a
+passphrase. The passphrase never leaves the tab and is never given to an agent - the browser
+encrypts precisely because that is the only place it exists. The publish button *refuses* a weak
+passphrase rather than warning about it, because the ciphertext is world-readable and attackable
+offline forever. Plaintext is deliberately not cached after unlocking, so a borrowed device asks
+again. Also: an optional weekday scheduled refresh, scoped to refresh-only - it never labels,
+drafts, or publishes.
+
+> The README's privacy claims were amended rather than left to quietly become false: publishing is
+> the one way data leaves the machine, it is opt-in, and the trade is spelled out.
+
+✅ **Phase 4 - shipped.** Funnel (applied → interviewing → offer, with conversion rates), an
+explicit "under review" count kept OUT of the conversion chain because most ATS platforms never send
+that signal and a rate built on it would mislead more than it informs, response-rate breakdowns by
+ATS vendor and by role, time-to-first-human-reply / time-to-rejection distributions, and the honest
+ghost rate (no human reply ever, independent of current status). Small-sample rows (n<3) are flagged
+rather than hidden.
+
+Company size, geography, and application channel beyond ATS vendor were in the original scope and
+were deliberately left out - nothing in real mail reliably states them, and this dashboard has never
+guessed a fact. Said explicitly on the analytics panel rather than silently dropped.
+
+A real accuracy bug was caught and fixed during verification: the funnel's "did he actually apply"
+gate used `appliedAt !== null`, which undercounted any application whose first captured event was
+already an interview or rejection with no earlier ack (Tekion - a human-recruiter thread that opens
+directly on an interview confirmation). That silently erased exactly the direct/human-recruiter
+channel this phase exists to measure. Fixed to use `status !== 'lead'` - the ladder's own signal for
+"never applied" - which correctly includes it. Verified against real data: Applied 28→36,
+Interviewing 0→4, "Direct / human recruiter" 0%→25% interview rate.
+
+**Phase 5 was scrapped and will not be built.** See `JOBS-FORGE.md` §14 for what it would have been
+and why, and §15 for the discovery backlog carried forward from the original plan.
+
+Two things Phase 0 deliberately does *not* do, and should not be "fixed" without a decision:
+- **It never guesses.** An application whose company cannot be determined shows as unknown and lands
+  in the review drawer. A blank field is honest; a guessed one is a lie the dashboard repeats.
+- **A rejection is never inferred from a subject line alone.** Lever's "Thank you for your interest
+  in X" is a rejection and Teamtailor's "Thanks For Sharing Your Interest With Us!" is an
+  acknowledgement. Marking a live application dead is the one unrecoverable error here.
+
+---
+
 ## Known limitations (current state)
 
 - **PDF export uses the browser print dialog** - faithful and keeps text selectable, but not yet a one-click server render (that's Pass 5). Worth a manual click-test.
@@ -191,6 +271,8 @@ Reliability polish so a generated resume is provably ATS-parseable.
 - **No accounts / multi-device** yet - everything is local to the browser until Pass 3.
 - **Browser storage is finite (~5MB).** Since Pass 2.5 a full quota is detected and warned about rather than silently losing edits, but it is still a ceiling: many resumes each with many versions will eventually hit it. Deleting old versions frees space; the real fix is Pass 3-cloud.
 - **Tests cover `src/lib` only** - the deterministic core. Components have no rendering tests yet (that would need jsdom and Testing Library); they are covered by typecheck, lint and the production build.
+- **Jobs Forge auto-refresh needs Chrome or Edge.** The File System Access API is not implemented in Firefox and Safari cannot reliably persist a file handle, so those browsers import the snapshot manually instead - same data, one extra click. Chrome resets file permission to "prompt" on most page loads unless `/jobs` is installed as an app, which is why it ships a web manifest.
+- **Jobs Forge does not work on a phone.** The API does not exist on mobile and the snapshot file is not there. That is the direct cost of keeping the data off the internet; Phase 3 (an encrypted snapshot) is the fix.
 
 ---
 
