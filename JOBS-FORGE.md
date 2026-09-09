@@ -481,7 +481,94 @@ npm run typecheck && npm run lint && npm test && npm run build
 
 ---
 
-## 13. First-time setup (user, once)
+## 13. Analytics (Phase 4)
+
+The dashboard's *Analytics* panel is entirely derived from what is already in
+the snapshot - `src/lib/jobs/funnel.ts`. There is nothing for you to do here on
+a routine refresh; this section exists so you understand what it does and does
+not measure, in case he asks.
+
+**It only uses three reliably-known facts from real mail:** the event
+timeline, the ATS vendor a thread came through, and the role title. Company
+size, geography, and "channel" beyond ATS vendor were in the original scope
+and were deliberately left out, because nothing in a Gmail thread reliably
+states them and this dashboard has never guessed a fact to fill a chart. If he
+wants those, see §15 (discovery backlog) - it is not a small addition, since it
+needs a real external lookup step you do not currently perform.
+
+If you are asked to improve funnel accuracy, the one rule worth knowing: a
+"did he actually apply" check must use `status !== 'lead'`, never
+`appliedAt !== null`. A human-recruiter thread that opens directly on an
+interview confirmation (no separate "thanks for applying" email) has no
+`appliedAt` at all, and gating on it silently erases exactly the
+direct/human-recruiter channel this analysis exists to measure - a real bug
+that shipped and was caught before merge.
+
+---
+
+## 14. Phase 5 — scrapped
+
+The original plan had a Phase 5: link each application to the specific resume
+version sent (`library[].id` in `../src/lib/store.ts`), attribute outcomes to
+resume variants, and feed real rejection/interview results back into
+ResumeForge's keyword scoring - the point where "Resume Forge" and "Jobs
+Forge" would have stopped being two separate tools.
+
+**It will not be built. Do not implement it, and do not resurrect it from an
+old plan file without being asked.** If you are asked why: the user decided to
+scrap it when reviewing the phase plan on 2026-09-09. No technical reason is
+recorded - it was a scope call, not a discovered blocker. Treat "Phase 5" as a
+name that no longer refers to anything on this project's roadmap.
+
+If a genuine need for resume-outcome attribution comes up later, it is a new
+feature to be scoped fresh, not a resumption of this one - a lot can change in
+both codebases before that conversation happens again.
+
+---
+
+## 15. Discovery backlog — not scheduled, not scrapped
+
+Raw material carried forward from the original planning conversation for a
+future expansion discussion. None of this is scheduled. Do not build any of it
+unless explicitly asked - it is listed here so it is not lost, not so it reads
+as a to-do list.
+
+**Pipeline intelligence**
+- Auto-detect roles applied to twice by accident (already latent in the
+  Meesho/Paytm shape from the Phase 0 backfill)
+- Salary/comp extraction from JDs and offer mails, normalized to one currency
+- Company-health signals alongside each application (funding, layoffs,
+  Glassdoor drift) - this is also where "company size" from the Phase 4 scope
+  would actually have to come from: a real external lookup, not a guess from
+  mail
+- Interviewer research auto-triggered when an interview is scheduled - the
+  `career-campaign` agent already does exactly this and could be wired in
+
+**Closing the loop with other repos**
+- `whoami` as the source of truth for every application answer
+- `opportunity-scout` writes new leads directly into Jobs Forge instead of a
+  chat message
+- Rejection-reason clustering across the corpus - the honest version of "why
+  am I not converting", one level deeper than the Phase 4 breakdowns
+
+**Workflow**
+- Calendar integration for interview slots (the Google Calendar MCP is already
+  connected)
+- One-click follow-up from a stale row, beyond the current export-a-plan
+  mechanism from Phase 2
+- A weekly digest as a scheduled task, alongside the existing refresh task
+- Reference/referral tracker - who referred him where, and when to reciprocate
+
+**Data quality**
+- A feedback loop where every manual correction (Phase 1) becomes a test
+  fixture, so the classifier provably improves over time rather than by
+  accident
+- A vendor-coverage report: "N threads from an unrecognized ATS this run - add
+  it?", surfaced instead of silently landing in the review drawer every time
+
+---
+
+## 16. First-time setup (user, once)
 
 1. `npm run dev`, open <http://localhost:3000/jobs> (or the deployed `/jobs`).
 2. **Choose file** → pick `~/Downloads/jobs-forge-snapshot.json`.

@@ -17,6 +17,7 @@ import { reconcileOverrides } from '@/lib/jobs';
 import { needsYouReason } from '@/lib/jobs/needsYou';
 import { ApplicationRow, CARD, KpiTile, MUTED, TEXT, ThreadRow } from './components/parts';
 import { BTN, ConnectPanel } from './components/ConnectPanel';
+import { AnalyticsPanel } from './components/AnalyticsPanel';
 import { GmailSyncPanel } from './components/GmailSyncPanel';
 import { ManualAddForm } from './components/ManualAddForm';
 import { PublishPanel } from './components/PublishPanel';
@@ -262,6 +263,7 @@ export function JobsDashboard() {
                 />
               )}
               {s.snapshot && <PublishPanel snapshot={s.snapshot} />}
+              <AnalyticsPanel applications={apps} />
               <SettingsPanel />
             </div>
 

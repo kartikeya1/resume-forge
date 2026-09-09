@@ -4,7 +4,7 @@ This document tracks **what has been built** and **what is planned** across the 
 
 **Legend:** ✅ done · 🔜 planned · 💭 needs a product/infra decision before starting
 
-_Last verified: 2026-09-09 · Pass 2.5 + Jobs Forge Phase 0-3 shipped · 453 tests, typecheck, lint and production build all green._
+_Last verified: 2026-09-09 · Pass 2.5 + Jobs Forge Phase 0-4 shipped (Phase 5 scrapped) · 479 tests, typecheck, lint and production build all green._
 
 ### Phase mapping
 
@@ -20,9 +20,10 @@ Kartikeya's repos, so "Phase 2" means the same thing everywhere:
 | **P4** features | product work, no outside dependency | Pass 3-local, Pass 5 |
 | **P5** decision-gated | needs a provider/key/budget call | Pass 3-cloud, Pass 4-AI |
 
-**Execution order recommendation:** Pass 2.5 is complete and Jobs Forge Phases 0-3 have shipped, so
-**Pass 3-local is next.** The deterministic core now has 453 tests and CI behind it, which is what
-the later passes needed in order to change scoring safely.
+**Execution order recommendation:** Pass 2.5 is complete and Jobs Forge Phases 0-4 have shipped
+(Phase 5 was scrapped - see `JOBS-FORGE.md` §14), so **Pass 3-local is next.** The deterministic core
+now has 479 tests and CI behind it, which is what the later passes needed in order to change scoring
+safely.
 
 ---
 
@@ -231,7 +232,27 @@ drafts, or publishes.
 > The README's privacy claims were amended rather than left to quietly become false: publishing is
 > the one way data leaves the machine, it is opt-in, and the trade is spelled out.
 
-🔜 **Phase 4** funnel analytics · **Phase 5** link applications to the resume version sent.
+✅ **Phase 4 - shipped.** Funnel (applied → interviewing → offer, with conversion rates), an
+explicit "under review" count kept OUT of the conversion chain because most ATS platforms never send
+that signal and a rate built on it would mislead more than it informs, response-rate breakdowns by
+ATS vendor and by role, time-to-first-human-reply / time-to-rejection distributions, and the honest
+ghost rate (no human reply ever, independent of current status). Small-sample rows (n<3) are flagged
+rather than hidden.
+
+Company size, geography, and application channel beyond ATS vendor were in the original scope and
+were deliberately left out - nothing in real mail reliably states them, and this dashboard has never
+guessed a fact. Said explicitly on the analytics panel rather than silently dropped.
+
+A real accuracy bug was caught and fixed during verification: the funnel's "did he actually apply"
+gate used `appliedAt !== null`, which undercounted any application whose first captured event was
+already an interview or rejection with no earlier ack (Tekion - a human-recruiter thread that opens
+directly on an interview confirmation). That silently erased exactly the direct/human-recruiter
+channel this phase exists to measure. Fixed to use `status !== 'lead'` - the ladder's own signal for
+"never applied" - which correctly includes it. Verified against real data: Applied 28→36,
+Interviewing 0→4, "Direct / human recruiter" 0%→25% interview rate.
+
+**Phase 5 was scrapped and will not be built.** See `JOBS-FORGE.md` §14 for what it would have been
+and why, and §15 for the discovery backlog carried forward from the original plan.
 
 Two things Phase 0 deliberately does *not* do, and should not be "fixed" without a decision:
 - **It never guesses.** An application whose company cannot be determined shows as unknown and lands
