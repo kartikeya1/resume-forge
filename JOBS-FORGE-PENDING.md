@@ -24,13 +24,14 @@ one-line change if you disagree.
 
 ## 2. Things only you can verify
 
-- **2.1 The connect screen's setup prompt has not been seen rendered.** Reaching
-  that state needs an empty snapshot cache, and the browser profile I was
-  testing in holds your real job-search data — I was not willing to clear it.
-  It is covered by unit tests, by typecheck, and the string is present in the
-  production bundle, but you will be the first to actually look at it. Check it
-  the next time you connect a file, or on a machine that has never opened
-  `/jobs`.
+- ~~**2.1 The connect screen's setup prompt.**~~ **Resolved.** I could not
+  reach that state locally without clearing your real cached snapshot, but the
+  Vercel preview build has no cache, so it renders the connect screen directly.
+  Verified there: the prompt copies 8,175 characters, says "I have no snapshot
+  yet, so this is a 90-day backfill", carries `newer_than:90d`, all 20 ATS
+  domains, the schema and the refusal path, correctly omits the
+  re-fetch-open-threads instruction (there is nothing to merge into), and its
+  clipboard fallback reveals the textarea with all 8,175 characters selected.
 - **2.2 Printing.** The print CSS is fixed and verified in the built stylesheet
   (`/jobs` used to print a blank page). I cannot open a real print preview, so
   give `Cmd-P` on `/jobs` one look. The resume print path is untouched by
@@ -71,4 +72,14 @@ one-line change if you disagree.
 - **4.2 Contrast cannot be measured right after toggling the theme.** This
   browser returns stale computed colours; it reported 1.73:1 for a button whose
   identical freshly-inserted clone measured 14.23:1. Measure on a page loaded
-  with the theme already applied.
+  with the theme already applied. Colours also have to be rasterised to a pixel
+  rather than parsed, because Tailwind v4 emits `lab()`/`oklch()`.
+- **4.3 Only `ApplicationforSPM` is a valid "fixtures leaked" sentinel.** Two
+  obvious alternatives are traps: `Pofile Matched` lives in `noise.ts`'s rule
+  table, and `me@example.com` became production code in Phase 4 (the prompt's
+  JSON schema placeholder). Both made me chase phantom leaks. Confirmed against
+  the deployed bundle: fixtures are absent.
+
+---
+
+*Verified against the Vercel preview for PR #3, all CI green.*
