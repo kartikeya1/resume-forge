@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { gmailThreadUrl } from '@/lib/jobs/labels';
 import { useOverridesStore } from '@/lib/jobs/overridesStore';
 import type { ExcludedThread } from '@/lib/jobs/types';
-import { CARD, MUTED } from './parts';
+import { CARD, MUTED } from './ui';
 
 /**
  * A first-class inbox for the threads the classifier could not place

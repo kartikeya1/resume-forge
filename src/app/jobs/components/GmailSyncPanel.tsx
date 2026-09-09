@@ -8,8 +8,7 @@ import {
   downloadLabelPlan, JOBS_LABELS, LABEL_BLURBS, summariseLabelPlan, type LabelPlan,
 } from '@/lib/jobs/labelPlan';
 import type { Application } from '@/lib/jobs/types';
-import { BTN, BTN_PRIMARY } from './ConnectPanel';
-import { CARD, MUTED, TEXT } from './parts';
+import { BTN, BTN_PRIMARY, CARD, MUTED, TEXT } from './ui';
 
 /**
  * The review surface for anything that will touch Gmail.

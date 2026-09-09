@@ -6,8 +6,7 @@ import {
   type JobsSettings,
 } from '@/lib/jobs/settings';
 import { useSettingsStore } from '@/lib/jobs/settingsStore';
-import { BTN } from './ConnectPanel';
-import { CARD, MUTED } from './parts';
+import { BTN, CARD, MUTED } from './ui';
 
 /**
  * The thresholds that decide "ghosted" vs "merely quiet". These are judgments

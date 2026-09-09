@@ -4,8 +4,7 @@ import { useId, useState } from 'react';
 import { encryptJson, KDF_ITERATIONS } from '@/lib/jobs/crypto';
 import { assessPassphrase } from '@/lib/jobs/passphrase';
 import type { JobsSnapshot } from '@/lib/jobs/snapshot';
-import { BTN, BTN_PRIMARY } from './ConnectPanel';
-import { CARD, MUTED, TEXT } from './parts';
+import { BTN, BTN_PRIMARY, CARD, MUTED, TEXT } from './ui';
 
 export const PUBLISHED_PATH = '/jobs-snapshot.enc';
 

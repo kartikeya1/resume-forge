@@ -5,14 +5,11 @@ import { AutoTextarea, Label, TextInput } from '@/components/ui';
 import { STATUS_LABELS, STATUS_ORDER } from '@/lib/jobs/labels';
 import { useOverridesStore } from '@/lib/jobs/overridesStore';
 import type { Application, JobStatus } from '@/lib/jobs/types';
-import { BTN } from './ConnectPanel';
-import { MUTED } from './parts';
+import { BTN, MUTED, SELECT_CLASS } from './ui';
 
 // Manual is excluded from a status select on a manual entry - it's not a
 // derived state, it's the raw truth the user typed in, so every status
 // (including the closed ones) is a valid manual choice.
-const SELECT_CLASS =
-  'w-full rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:focus:border-neutral-400 dark:focus:ring-neutral-400';
 
 export function EditPanel({ app, allApps }: { app: Application; allApps: Application[] }) {
   const overridesStore = useOverridesStore();

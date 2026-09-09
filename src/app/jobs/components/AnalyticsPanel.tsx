@@ -6,8 +6,7 @@ import {
   timeToFirstHumanReply, timeToRejection, type BreakdownRow, type DurationStats,
 } from '@/lib/jobs/funnel';
 import type { Application } from '@/lib/jobs/types';
-import { BTN } from './ConnectPanel';
-import { CARD, MUTED, TEXT } from './parts';
+import { BTN, CARD, MUTED, TEXT } from './ui';
 
 function pct(n: number | null): string {
   return n === null ? '—' : `${Math.round(n * 100)}%`;

@@ -5,11 +5,8 @@ import { TextInput } from '@/components/ui';
 import { STATUS_LABELS, STATUS_ORDER } from '@/lib/jobs/labels';
 import { useOverridesStore } from '@/lib/jobs/overridesStore';
 import type { JobStatus } from '@/lib/jobs/types';
-import { BTN, BTN_PRIMARY } from './ConnectPanel';
-import { CARD } from './parts';
+import { BTN, BTN_PRIMARY, CARD, SELECT_CLASS } from './ui';
 
-const SELECT_CLASS =
-  'w-full rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-sm text-neutral-900 outline-none transition focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:focus:border-neutral-400 dark:focus:ring-neutral-400';
 
 /**
  * For anything that never generated email: a LinkedIn Easy Apply, a referral

@@ -5,14 +5,8 @@ import { interviewPrepPrompt } from '@/lib/jobs/activity';
 import { STATUS_BADGE, STATUS_LABELS, gmailThreadUrl, relativeTime } from '@/lib/jobs/labels';
 import type { Application, ExcludedThread } from '@/lib/jobs/types';
 import { EditPanel } from './EditPanel';
+import { CARD, CHIP, MUTED, TEXT } from './ui';
 import { WhyPopover } from './WhyPopover';
-
-// Repeated class strings hoisted to module consts, matching the convention in
-// src/components/InsightsPanel.tsx.
-export const CARD = 'rounded-lg border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800';
-export const TEXT = 'text-neutral-700 dark:text-neutral-200';
-export const MUTED = 'text-neutral-500 dark:text-neutral-400';
-export const CHIP = 'rounded-full px-2 py-0.5 text-[11px] font-medium';
 
 export function StatusPill({ status }: { status: Application['status'] }) {
   return <span className={`${CHIP} ${STATUS_BADGE[status]}`}>{STATUS_LABELS[status]}</span>;
