@@ -392,7 +392,74 @@ finished prose. Do not talk him out of editing them.
 
 ---
 
-## 10. Extending the rules
+## 10. Publishing for phone access (Phase 3)
+
+The desktop path reads a plaintext file from disk. A phone has no File System
+Access API and no file, so it reads a **published encrypted snapshot** instead:
+`public/jobs-snapshot.enc`, committed to the repo and served with the app.
+
+**You never handle the passphrase.** The browser encrypts, because that is the
+only place the passphrase exists. Your entire role is committing a file whose
+contents you cannot read.
+
+### Procedure
+
+1. He clicks *Publish for phone* on the dashboard, types his passphrase, and
+   gets `~/Downloads/jobs-snapshot.enc`.
+2. If he asks you to publish it: move that file to
+   `public/jobs-snapshot.enc`, commit, and push. Vercel redeploys and the phone
+   picks it up.
+3. **Say the snapshot date in your report.** A published snapshot is invisible
+   staleness - he cannot tell from his phone that it is three weeks old until
+   he unlocks it, so tell him what he just shipped.
+
+### Hard rules
+
+- **Never ask for, accept, store, or log the passphrase.** If he offers it in
+  chat, tell him not to and that you do not need it. There is nothing you can
+  do with it that he cannot do in the browser.
+- **Never try to generate the `.enc` file yourself.** You would need the
+  passphrase to do it, which is exactly the thing you must not have.
+- **`public/jobs-snapshot.enc` is committed on purpose** - do not add it to
+  `.gitignore`. It is ciphertext. The *plaintext*
+  `jobs-forge-snapshot.json` is the one that must never be committed, and
+  `.gitignore` already blocks that.
+- If he wants to stop publishing, `git rm public/jobs-snapshot.enc` and push.
+  The phone path simply goes away; nothing else changes.
+
+---
+
+## 11. Scheduled refresh (Phase 3, optional)
+
+A refresh can run on a schedule instead of on request. It is an ordinary
+Claude Code scheduled task running section 7's procedure - same runbook, same
+Gmail MCP, same output file.
+
+**Scope it to a refresh and nothing else.** A scheduled run must:
+
+- read Gmail and overwrite `~/Downloads/jobs-forge-snapshot.json` in place;
+- **never** apply labels (section 8), create drafts (section 9), or publish
+  (section 10). Those are the three things that touch something outside the
+  snapshot file, and none of them should ever happen while he is not watching.
+
+What a scheduled refresh cannot do, by design: update the *published* snapshot.
+That needs the passphrase, which lives only in his browser. So the desktop
+dashboard stays current automatically while the phone stays at whatever he last
+published - and the unlock screen shows that date, so the staleness is visible
+rather than silent.
+
+### No API key is needed for this
+
+The scheduled task uses Claude with the Gmail MCP that is already connected.
+A separate inference provider (Groq or anything else) would only be needed for
+a standalone script that does *not* run through Claude Code - and such a script
+would have to rebuild Gmail OAuth from scratch to replace an MCP that already
+works. That is a large amount of new surface for no gain, so this phase
+deliberately does not add it.
+
+---
+
+## 12. Extending the rules
 
 When a real sender is misclassified, fix the data table rather than special-casing:
 
@@ -414,7 +481,7 @@ npm run typecheck && npm run lint && npm test && npm run build
 
 ---
 
-## 11. First-time setup (user, once)
+## 13. First-time setup (user, once)
 
 1. `npm run dev`, open <http://localhost:3000/jobs> (or the deployed `/jobs`).
 2. **Choose file** → pick `~/Downloads/jobs-forge-snapshot.json`.

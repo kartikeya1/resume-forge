@@ -4,7 +4,7 @@ This document tracks **what has been built** and **what is planned** across the 
 
 **Legend:** ✅ done · 🔜 planned · 💭 needs a product/infra decision before starting
 
-_Last verified: 2026-09-09 · Pass 2.5 + Jobs Forge Phase 0-2 shipped · 427 tests, typecheck, lint and production build all green._
+_Last verified: 2026-09-09 · Pass 2.5 + Jobs Forge Phase 0-3 shipped · 453 tests, typecheck, lint and production build all green._
 
 ### Phase mapping
 
@@ -20,8 +20,8 @@ Kartikeya's repos, so "Phase 2" means the same thing everywhere:
 | **P4** features | product work, no outside dependency | Pass 3-local, Pass 5 |
 | **P5** decision-gated | needs a provider/key/budget call | Pass 3-cloud, Pass 4-AI |
 
-**Execution order recommendation:** Pass 2.5 is complete and Jobs Forge Phases 0-2 have shipped, so
-**Pass 3-local is next.** The deterministic core now has 427 tests and CI behind it, which is what
+**Execution order recommendation:** Pass 2.5 is complete and Jobs Forge Phases 0-3 have shipped, so
+**Pass 3-local is next.** The deterministic core now has 453 tests and CI behind it, which is what
 the later passes needed in order to change scoring safely.
 
 ---
@@ -218,8 +218,20 @@ applications where a real human is on the other end (drafts only, never sent), a
 "no application in N days" momentum nudge, and an interview-prep hand-off that copies a prompt for
 the `interview-prep` skill.
 
-🔜 **Phase 3** encrypted snapshot for phone access · **Phase 4** funnel analytics · **Phase 5** link
-applications to the resume version sent.
+✅ **Phase 3 - shipped.** Phone access, which was the known gap from Phase 0. *Publish for phone*
+encrypts the snapshot in the browser (AES-256-GCM, PBKDF2-SHA256 at 600,000 rounds) and downloads
+ciphertext to commit as `public/jobs-snapshot.enc`; any device then opens `/jobs` and unlocks with a
+passphrase. The passphrase never leaves the tab and is never given to an agent - the browser
+encrypts precisely because that is the only place it exists. The publish button *refuses* a weak
+passphrase rather than warning about it, because the ciphertext is world-readable and attackable
+offline forever. Plaintext is deliberately not cached after unlocking, so a borrowed device asks
+again. Also: an optional weekday scheduled refresh, scoped to refresh-only - it never labels,
+drafts, or publishes.
+
+> The README's privacy claims were amended rather than left to quietly become false: publishing is
+> the one way data leaves the machine, it is opt-in, and the trade is spelled out.
+
+🔜 **Phase 4** funnel analytics · **Phase 5** link applications to the resume version sent.
 
 Two things Phase 0 deliberately does *not* do, and should not be "fixed" without a decision:
 - **It never guesses.** An application whose company cannot be determined shows as unknown and lands

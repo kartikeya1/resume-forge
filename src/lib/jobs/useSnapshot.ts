@@ -19,8 +19,27 @@ import {
   reconnect,
   startPolling,
 } from './fsAccess';
+import { decryptJson, DecryptError, isEncryptedEnvelope, type EncryptedEnvelope } from './crypto';
 import { clearCache, clearHandle, getCache, getHandle, putCache, type FileMeta } from './handleStore';
-import { InvalidSnapshotError, parseSnapshotText, type JobsSnapshot } from './snapshot';
+import { InvalidSnapshotError, parseSnapshot, parseSnapshotText, type JobsSnapshot } from './snapshot';
+
+/** Where a published encrypted snapshot is served from, if one was committed. */
+const PUBLISHED_PATH = '/jobs-snapshot.enc';
+
+/**
+ * Looks for a published snapshot. Absent on most deploys, so a 404 is the
+ * normal case and returns null rather than surfacing an error.
+ */
+async function fetchPublished(): Promise<EncryptedEnvelope | null> {
+  try {
+    const res = await fetch(PUBLISHED_PATH, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const raw: unknown = await res.json();
+    return isEncryptedEnvelope(raw) ? raw : null;
+  } catch {
+    return null;
+  }
+}
 
 export type ConnectionState =
   | 'loading'
@@ -28,6 +47,7 @@ export type ConnectionState =
   | 'cached' // rendering from cache, file not currently readable
   | 'needs-permission' // handle exists, one click away
   | 'live' // handle connected and readable
+  | 'locked' // a published encrypted snapshot exists, needs a passphrase
   | 'unsupported'; // no File System Access - import only
 
 export interface SnapshotState {
@@ -38,6 +58,8 @@ export interface SnapshotState {
   connection: ConnectionState;
   pickerSupported: boolean;
   busy: boolean;
+  /** Set when a published snapshot was found and is waiting on a passphrase. */
+  envelope: EncryptedEnvelope | null;
 }
 
 const INITIAL: SnapshotState = {
@@ -48,11 +70,16 @@ const INITIAL: SnapshotState = {
   connection: 'loading',
   pickerSupported: false,
   busy: false,
+  envelope: null,
 };
 
 export function useSnapshot() {
   const [state, setState] = useState<SnapshotState>(INITIAL);
   const metaRef = useRef<FileMeta | null>(null);
+  // So `unlock` can read the envelope without depending on `state` and
+  // re-creating itself on every render.
+  const stateRef = useRef<SnapshotState>(INITIAL);
+  stateRef.current = state;
   const stopPolling = useRef<(() => void) | null>(null);
 
   const accept = useCallback(async (text: string, meta: Omit<FileMeta, 'readAt'>, live: boolean) => {
@@ -113,6 +140,16 @@ export function useSnapshot() {
       }
 
       if (!supported) {
+        // A phone has no File System Access at all, so a published snapshot is
+        // the only way it will ever show anything.
+        if (!cached) {
+          const found = await fetchPublished();
+          if (cancelled) return;
+          if (found) {
+            setState((s) => ({ ...s, pickerSupported: false, connection: 'locked', envelope: found }));
+            return;
+          }
+        }
         setState((s) => ({
           ...s,
           pickerSupported: false,
@@ -124,6 +161,16 @@ export function useSnapshot() {
       const handle = await getHandle();
       if (cancelled) return;
       if (!handle) {
+        // Nothing local. A published encrypted snapshot is the phone path, so
+        // check for one before falling back to the connect panel.
+        if (!cached) {
+          const found = await fetchPublished();
+          if (cancelled) return;
+          if (found) {
+            setState((s) => ({ ...s, pickerSupported: true, connection: 'locked', envelope: found }));
+            return;
+          }
+        }
         setState((s) => ({ ...s, pickerSupported: true, connection: cached ? 'cached' : 'none' }));
         return;
       }
@@ -153,6 +200,44 @@ export function useSnapshot() {
       stopPolling.current?.();
     };
   }, [accept, beginPolling]);
+
+  /**
+   * Decrypt a published snapshot. Deliberately does NOT cache the plaintext:
+   * on a shared or borrowed device the passphrase should be required again
+   * next visit rather than the data sitting in IndexedDB indefinitely.
+   */
+  const unlock = useCallback(async (passphrase: string) => {
+    setState((s) => ({ ...s, busy: true, error: null }));
+    const envelope = stateRef.current.envelope;
+    if (!envelope) {
+      setState((s) => ({ ...s, busy: false, error: 'Nothing published to unlock.' }));
+      return;
+    }
+    try {
+      const raw = await decryptJson(envelope, passphrase);
+      const { snapshot, warnings } = parseSnapshot(raw);
+      setState((s) => ({
+        ...s,
+        snapshot,
+        warnings,
+        error: null,
+        busy: false,
+        connection: 'live',
+        envelope: null,
+      }));
+    } catch (e) {
+      setState((s) => ({
+        ...s,
+        busy: false,
+        error:
+          e instanceof DecryptError
+            ? e.message
+            : e instanceof InvalidSnapshotError
+              ? e.message
+              : 'Could not open the published snapshot.',
+      }));
+    }
+  }, []);
 
   /** Must be called straight from a click handler - it needs the gesture. */
   const connect = useCallback(async () => {
@@ -256,5 +341,5 @@ export function useSnapshot() {
     setState({ ...INITIAL, connection: 'none', pickerSupported: isPickerSupported() });
   }, []);
 
-  return { ...state, connect, grant, refresh, importFile, importDrop, disconnect };
+  return { ...state, connect, grant, refresh, importFile, importDrop, disconnect, unlock };
 }

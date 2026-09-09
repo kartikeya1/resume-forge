@@ -19,8 +19,10 @@ import { ApplicationRow, CARD, KpiTile, MUTED, TEXT, ThreadRow } from './compone
 import { BTN, ConnectPanel } from './components/ConnectPanel';
 import { GmailSyncPanel } from './components/GmailSyncPanel';
 import { ManualAddForm } from './components/ManualAddForm';
+import { PublishPanel } from './components/PublishPanel';
 import { ReviewDrawer } from './components/ReviewDrawer';
 import { SettingsPanel } from './components/SettingsPanel';
+import { UnlockPanel } from './components/UnlockPanel';
 
 /** Beyond this the dashboard is probably lying, so say so loudly. */
 const STALE_HOURS = 36;
@@ -161,7 +163,15 @@ export function JobsDashboard() {
           </p>
         )}
 
-        {!s.snapshot ? (
+        {!s.snapshot && s.connection === 'locked' && s.envelope ? (
+          <UnlockPanel
+            envelope={s.envelope}
+            onUnlock={(pass) => void s.unlock(pass)}
+            busy={s.busy}
+            error={s.error}
+            now={now}
+          />
+        ) : !s.snapshot ? (
           <ConnectPanel
             connection={s.connection}
             pickerSupported={s.pickerSupported}
@@ -251,6 +261,7 @@ export function JobsDashboard() {
                   now={now}
                 />
               )}
+              {s.snapshot && <PublishPanel snapshot={s.snapshot} />}
               <SettingsPanel />
             </div>
 
