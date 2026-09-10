@@ -8,6 +8,27 @@
 :root {
   --background: #f5f5f4;
   --foreground: #171717;
+  color-scheme: light;
+}
+
+/* Scrollbars and the form controls the browser paints itself follow
+   `color-scheme`, not our palette - so with none declared they stayed light
+   in dark mode. That is the one part of dark mode no amount of colouring
+   elements can reach: the board alone has five scroll containers, and every
+   one of them had a white scrollbar sitting on a near-black lane.
+
+   Declared on `.dark` rather than on <html> because that is where the theme
+   class actually lives - both /jobs and the resume page put it on their own
+   page-root div, not on the document. */
+.dark {
+  color-scheme: dark;
+}
+
+/* The resume paper stays "paper white" even while the chrome around it goes
+   dark (see the @custom-variant note above), and color-scheme inherits - so
+   pin it back, or its scrollbars and controls would darken with the app. */
+#resume-paper {
+  color-scheme: light;
 }
 
 body {
