@@ -41,6 +41,44 @@ async function fetchPublished(): Promise<EncryptedEnvelope | null> {
   }
 }
 
+/**
+ * `?demo=1` loads the fixture mailbox instead of his real snapshot, so the
+ * dashboard can be driven in a browser - thirteen lanes, every status, the
+ * stale banner - without a file on disk and without exposing real job-search
+ * data in a screenshot.
+ *
+ * Gated on the build: the fixtures are a ~40KB module of verbatim subject
+ * lines, and they have no business in the bundle a real user downloads. The
+ * `process.env.NODE_ENV` check is what lets the bundler drop the dynamic
+ * import entirely in production.
+ */
+function demoRequest(): { stale: number } | null {
+  if (typeof window === 'undefined') return null;
+  const q = new URLSearchParams(window.location.search);
+  if (q.get('demo') !== '1') return null;
+  // ?demo=1&stale=48 to exercise the staleness banner and the amber pill.
+  const stale = Number(q.get('stale'));
+  return { stale: Number.isFinite(stale) && stale > 0 ? stale : 4 };
+}
+
+/**
+ * Loads the fixture-backed demo snapshot, or null in a production build.
+ *
+ * The `process.env.NODE_ENV` test sits LEXICALLY around the `import()` on
+ * purpose: the bundler substitutes the literal, folds the condition to false
+ * and drops the fixture module from the build entirely. Verified after
+ * `npm run build` by grepping .next for `ApplicationforSPM`, a string that
+ * exists only in the fixtures - absent from a production build, present in
+ * dev. Testing NODE_ENV somewhere else and branching on the result would
+ * leave the import reachable as far as the bundler can tell.
+ */
+async function loadDemoSnapshot(): Promise<((now: number, staleHoursAgo?: number) => JobsSnapshot) | null> {
+  if (process.env.NODE_ENV !== 'production') {
+    return (await import('./__fixtures__/snapshot')).demoSnapshot;
+  }
+  return null;
+}
+
 export type ConnectionState =
   | 'loading'
   | 'none' // nothing connected, nothing cached
@@ -81,6 +119,7 @@ export function useSnapshot() {
   const stateRef = useRef<SnapshotState>(INITIAL);
   stateRef.current = state;
   const stopPolling = useRef<(() => void) | null>(null);
+  const demo = useRef<{ stale: number } | null>(null);
 
   const accept = useCallback(async (text: string, meta: Omit<FileMeta, 'readAt'>, live: boolean) => {
     try {
@@ -124,6 +163,28 @@ export function useSnapshot() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const wantsDemo = demoRequest();
+      if (wantsDemo) {
+        const demoSnapshot = await loadDemoSnapshot();
+        if (cancelled) return;
+        if (demoSnapshot) {
+          demo.current = wantsDemo;
+          // Deliberately not cached: a demo run must never overwrite the
+          // cache holding his real snapshot.
+          setState((s) => ({
+            ...s,
+            snapshot: demoSnapshot(Date.now(), wantsDemo.stale),
+            meta: { name: 'demo-fixture.json', size: 0, lastModified: Date.now(), readAt: Date.now() },
+            warnings: ['Demo data from the test fixtures. This is not your mailbox.'],
+            connection: 'live',
+            pickerSupported: isPickerSupported(),
+          }));
+          return;
+        }
+        // Production: no fixtures in the build, so demo mode cannot engage.
+        // Fall through and boot normally rather than showing an error.
+      }
+
       const supported = isPickerSupported();
       const cached = await getCache();
       if (cancelled) return;
@@ -287,6 +348,16 @@ export function useSnapshot() {
 
   /** Manual re-read, for when the agent has just rewritten the file. */
   const refresh = useCallback(async () => {
+    if (demo.current) {
+      const demoSnapshot = await loadDemoSnapshot();
+      const stale = demo.current.stale;
+      setState((s) => ({
+        ...s,
+        snapshot: demoSnapshot ? demoSnapshot(Date.now(), stale) : s.snapshot,
+        busy: false,
+      }));
+      return;
+    }
     setState((s) => ({ ...s, busy: true }));
     const handle = await getHandle();
     if (!handle) {

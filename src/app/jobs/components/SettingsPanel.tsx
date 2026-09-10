@@ -1,13 +1,12 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import {
   DEFAULT_SETTINGS, isCustomised, SETTING_KEYS, SETTING_LABELS, SETTING_UNITS, settingLimits,
   type JobsSettings,
 } from '@/lib/jobs/settings';
 import { useSettingsStore } from '@/lib/jobs/settingsStore';
-import { BTN } from './ConnectPanel';
-import { CARD, MUTED } from './parts';
+import { BTN, CARD, MUTED } from './ui';
 
 /**
  * The thresholds that decide "ghosted" vs "merely quiet". These are judgments
@@ -19,25 +18,11 @@ export function SettingsPanel() {
   const settings = useSettingsStore((s) => s.settings);
   const setSetting = useSettingsStore((s) => s.setSetting);
   const resetSettings = useSettingsStore((s) => s.resetSettings);
-  const [open, setOpen] = useState(false);
   const panelId = useId();
 
-  if (!open) {
-    return (
-      <button type="button" className={BTN} onClick={() => setOpen(true)} aria-expanded={false} aria-controls={panelId}>
-        Thresholds{isCustomised(settings) ? ' (custom)' : ''}
-      </button>
-    );
-  }
 
   return (
     <div id={panelId} className={`${CARD} w-full px-3 py-3`}>
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Thresholds</h3>
-        <button type="button" className={BTN} onClick={() => setOpen(false)} aria-expanded aria-controls={panelId}>
-          Close
-        </button>
-      </div>
       <p className={`mb-3 text-xs ${MUTED}`}>
         Every status on this page is re-derived the moment you change one of these.
       </p>

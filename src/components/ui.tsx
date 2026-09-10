@@ -180,15 +180,28 @@ export function SectionCard({
 // and on Escape, and returns focus to the trigger so keyboard users are not
 // stranded at the top of the document. Backs every dropdown in the top bar
 // (File, Export, Resumes, Versions) - fix behaviour here, not per menu.
+const TRIGGER_CLASS =
+  'inline-flex max-w-[220px] items-center gap-1.5 rounded-md border border-neutral-300 px-2.5 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800';
+
 export function Menu({
   label,
   width = 'w-72',
   align = 'left',
+  triggerClassName = TRIGGER_CLASS,
+  triggerLabel,
   children,
 }: {
   label: React.ReactNode;
   width?: string;
   align?: 'left' | 'right';
+  /**
+   * Replaces the default trigger styling outright. The Jobs Forge board uses
+   * this to make a status pill *be* the dropdown trigger, so a card does not
+   * have to show a pill and a separate button for the same fact.
+   */
+  triggerClassName?: string;
+  /** Accessible name, for when `label` is too terse to stand alone. */
+  triggerLabel?: string;
   children: (close: () => void) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -233,7 +246,8 @@ export function Menu({
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={open ? panelId : undefined}
-        className="inline-flex max-w-[220px] items-center gap-1.5 rounded-md border border-neutral-300 px-2.5 py-1.5 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+        aria-label={triggerLabel}
+        className={triggerClassName}
       >
         <span className="truncate">{label}</span>
         <span aria-hidden="true" className="text-xs text-neutral-400">▾</span>

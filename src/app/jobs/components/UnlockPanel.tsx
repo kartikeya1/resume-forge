@@ -3,8 +3,7 @@
 import { useId, useState } from 'react';
 import { relativeTime } from '@/lib/jobs/labels';
 import type { EncryptedEnvelope } from '@/lib/jobs/crypto';
-import { BTN_PRIMARY } from './ConnectPanel';
-import { CARD, MUTED, TEXT } from './parts';
+import { BTN_PRIMARY, CARD, MUTED, TEXT } from './ui';
 
 /**
  * The phone path. A published encrypted snapshot exists, so there is no file

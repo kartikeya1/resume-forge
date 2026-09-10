@@ -66,6 +66,11 @@ These are not style preferences. Each one has a failure behind it.
 
 ## 3. Gather the mail
 
+> **Mirrored in code.** `src/lib/jobs/syncPrompt.ts` inlines these queries so the
+> dashboard can hand out a prompt that works on a machine without this repo. If
+> you change a query or add an ATS domain here, change it there too -
+> `syncPrompt.test.ts` cross-checks this file and will fail if the two drift.
+
 Run **both** queries. The first is the high-precision one; the second is a sweep
 that catches senders not yet on the allowlist.
 
@@ -108,6 +113,9 @@ it anyway.
 ---
 
 ## 4. The snapshot format
+
+> **Mirrored in code**, as above - the schema and the field notes are restated
+> in `syncPrompt.ts`.
 
 Write valid JSON to `~/Downloads/jobs-forge-snapshot.json`:
 
@@ -290,6 +298,11 @@ longer) window and fresh judgment on every thread.
 ---
 
 ## 8. Gmail write-back (Phase 2)
+
+> **Mirrored in code.** `buildLabelApplyPrompt` in `src/lib/jobs/syncPrompt.ts`
+> restates this procedure and its hard rules, for pasting into an AI that cannot
+> read this file. Change both together; `syncPrompt.test.ts` cross-checks the
+> five label names against this section.
 
 **Read this whole section before touching a label. This is the only part of
 Jobs Forge that writes to a mailbox with ~181,000 messages in it.**

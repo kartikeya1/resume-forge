@@ -8,8 +8,9 @@ import {
   downloadLabelPlan, JOBS_LABELS, LABEL_BLURBS, summariseLabelPlan, type LabelPlan,
 } from '@/lib/jobs/labelPlan';
 import type { Application } from '@/lib/jobs/types';
-import { BTN, BTN_PRIMARY } from './ConnectPanel';
-import { CARD, MUTED, TEXT } from './parts';
+import { INLINE_PLAN_LIMIT, buildLabelApplyPrompt, buildRefreshPrompt } from '@/lib/jobs/syncPrompt';
+import { CopyPromptBlock } from './CopyPromptBlock';
+import { BTN, BTN_PRIMARY, CARD, MUTED, TEXT } from './ui';
 
 /**
  * The review surface for anything that will touch Gmail.
@@ -24,49 +25,52 @@ export function GmailSyncPanel({
   applications,
   followUpStaleDays,
   now,
+  until,
+  since,
+  mailbox,
 }: {
   labelPlan: LabelPlan;
   applications: Application[];
   followUpStaleDays: number;
   now: number;
+  /** The snapshot window, so the refresh prompt asks for a delta not a rebuild. */
+  until: string | null;
+  since: string | null;
+  mailbox?: string;
 }) {
-  const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const panelId = useId();
   const followUps: FollowUpPlan = buildFollowUpPlan(applications, followUpStaleDays, now);
 
-  if (!open) {
-    return (
-      <button type="button" className={BTN} onClick={() => setOpen(true)} aria-expanded={false} aria-controls={panelId}>
-        Gmail sync
-        {labelPlan.changes.length > 0 && (
-          <span className="ml-1 rounded-full bg-neutral-200 px-1.5 text-[10px] tabular-nums dark:bg-neutral-700">
-            {labelPlan.changes.length}
-          </span>
-        )}
-      </button>
-    );
-  }
 
   const preview = showAll ? labelPlan.changes : labelPlan.changes.slice(0, 8);
 
   return (
     <div id={panelId} className={`${CARD} w-full px-3 py-3`}>
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Gmail sync</h3>
-        <button type="button" className={BTN} onClick={() => setOpen(false)} aria-expanded aria-controls={panelId}>
-          Close
-        </button>
-      </div>
 
       <p className={`max-w-prose text-sm ${TEXT}`}>
-        This page cannot write to Gmail. It exports a plan; an agent applies it. Read the plan
-        first - that is the point of it.
+        This page cannot write to Gmail. It decides what should change, and an AI applies it. Read
+        the plan below first - that is the point of it.
       </p>
       <p className={`mt-1.5 max-w-prose text-xs ${MUTED}`}>
         Every label sits under <code>JobsForge/</code>, so this can never touch your own labels, and
         deleting those five labels undoes the whole thing.
       </p>
+
+      {/* ---- Refresh ---- */}
+      <section className="mt-4" aria-labelledby="refresh-h">
+        <h4
+          id="refresh-h"
+          className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400"
+        >
+          Refresh the snapshot
+        </h4>
+        <CopyPromptBlock
+          prompt={buildRefreshPrompt({ until, since, mailbox, now })}
+          label="Copy the refresh prompt"
+          hint="Reads your Gmail and rewrites the snapshot file. Self-contained, so it works in any chat window - it asks only for the days since this snapshot, not a fresh 90-day sweep."
+        />
+      </section>
 
       {/* ---- Labels ---- */}
       <section className="mt-4" aria-labelledby="labels-h">
@@ -136,10 +140,19 @@ export function GmailSyncPanel({
             Export label plan
           </button>
         </div>
-        <p className={`mt-2 text-xs ${MUTED}`}>
-          Then tell an agent: <em>apply the label plan in my Downloads folder</em>. It follows the
-          Gmail write-back section of <code>JOBS-FORGE.md</code>.
-        </p>
+        {labelPlan.changes.length > 0 && (
+          <div className="mt-3">
+            <CopyPromptBlock
+              prompt={buildLabelApplyPrompt({ plan: labelPlan })}
+              label="Copy the apply prompt"
+              hint={
+                labelPlan.changes.length <= INLINE_PLAN_LIMIT
+                  ? 'The plan is small enough to travel inside the prompt, so there is no file to move - paste this into any AI that can label your Gmail.'
+                  : 'Too large to paste inline, so export the plan first; the prompt tells the AI where to find it.'
+              }
+            />
+          </div>
+        )}
       </section>
 
       {/* ---- Follow-ups ---- */}

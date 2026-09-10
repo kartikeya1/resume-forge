@@ -1,13 +1,12 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import {
   breakdownByRole, breakdownByVendor, buildFunnel, MIN_SAMPLE, replyRate,
   timeToFirstHumanReply, timeToRejection, type BreakdownRow, type DurationStats,
 } from '@/lib/jobs/funnel';
 import type { Application } from '@/lib/jobs/types';
-import { BTN } from './ConnectPanel';
-import { CARD, MUTED, TEXT } from './parts';
+import { CARD, MUTED, TEXT } from './ui';
 
 function pct(n: number | null): string {
   return n === null ? '—' : `${Math.round(n * 100)}%`;
@@ -21,16 +20,8 @@ function pct(n: number | null): string {
  * to since Phase 0. Say so on screen rather than silently omitting it.
  */
 export function AnalyticsPanel({ applications }: { applications: Application[] }) {
-  const [open, setOpen] = useState(false);
   const panelId = useId();
 
-  if (!open) {
-    return (
-      <button type="button" className={BTN} onClick={() => setOpen(true)} aria-expanded={false} aria-controls={panelId}>
-        Analytics
-      </button>
-    );
-  }
 
   const funnel = buildFunnel(applications);
   const replies = replyRate(applications);
@@ -41,12 +32,6 @@ export function AnalyticsPanel({ applications }: { applications: Application[] }
 
   return (
     <div id={panelId} className={`${CARD} w-full px-3 py-3`}>
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Analytics</h3>
-        <button type="button" className={BTN} onClick={() => setOpen(false)} aria-expanded aria-controls={panelId}>
-          Close
-        </button>
-      </div>
 
       {funnel.applied === 0 ? (
         <p className={`text-sm ${MUTED}`}>Nothing submitted yet - there is nothing to analyse.</p>

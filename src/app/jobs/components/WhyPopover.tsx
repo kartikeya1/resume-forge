@@ -3,7 +3,7 @@
 import { Menu } from '@/components/ui';
 import { STATUS_LABELS } from '@/lib/jobs/labels';
 import type { Application } from '@/lib/jobs/types';
-import { MUTED, TEXT } from './parts';
+import { MUTED, TEXT } from './ui';
 
 // Reuses the repo's existing Menu primitive (src/components/ui.tsx) rather
 // than building a second popover implementation - it already has outside-click
