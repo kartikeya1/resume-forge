@@ -1,8 +1,10 @@
 # Jobs Forge — open items for Kartikeya
 
-Everything in the UI rebuild (phases 0–6) is built, tested and pushed. This is
-the short list of things that genuinely need **you**, either because they need a
-human judgement or because they need access I deliberately did not take.
+The UI rebuild (phases 0–6, plus the ribbon declutter, the new entry screen and
+the dark-scrollbar fix) is **merged to `main` and live in production** — PR #3,
+merged 2026-09-10. This is the short list of things that genuinely need **you**,
+either because they need a human judgement or because they need access I
+deliberately did not take.
 
 Nothing here blocks using the board.
 
@@ -45,6 +47,16 @@ one-line change if you disagree.
   That is the one claim of Phase 4 I cannot test myself, since I would be
   grading my own prompt.
 
+## 2b. Next thing on the list
+
+- **A landing page in front of everything.** Your idea, noted here so it does
+  not get lost: `/` becomes a launcher that sends you to Resume Forge, Jobs
+  Forge, or whatever comes next, rather than `/` being Resume Forge itself.
+  Worth knowing before that starts: `/` currently *is* the resume builder, so
+  this means moving it (probably to `/resume`) and leaving a redirect, and the
+  resume page owns the `#resume-paper` print path and its own `.dark` root —
+  both of which the new launcher would sit above. Not started.
+
 ## 3. Small things I chose not to do
 
 - **3.1 Eight `AppFlags` fields still have no surface** —
@@ -58,7 +70,12 @@ one-line change if you disagree.
   icon library is installed and the obvious Unicode glyphs render as colour
   emoji on some platforms. If you want real icons, that is a dependency
   decision for you.
-- **3.3 `scratch/` holds two verification scripts** (`acceptance-sweep.mjs`,
+- **3.3 The scrollbar fix was a one-liner that had been missing all along.**
+  `color-scheme` was never declared in this project, so the browser painted its
+  own chrome light regardless of the palette. Worth remembering for any future
+  page: colouring elements cannot reach scrollbars, native selects, or date
+  pickers — only `color-scheme` can.
+- **3.4 `scratch/` holds two verification scripts** (`acceptance-sweep.mjs`,
   `phase-regression.mjs`). Gitignored, so they are not on GitHub. If you want
   them to run in CI they need to move into the repo proper and become real
   tests.
