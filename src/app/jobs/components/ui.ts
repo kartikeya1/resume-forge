@@ -33,9 +33,55 @@ export const SELECT_CLASS =
 
 // ---- Board chrome ---------------------------------------------------------
 
-/** A smaller button for the ribbon, where vertical space is tight. */
+// ---- Ribbon: three weights, not one ---------------------------------------
+//
+// The ribbon had twelve controls and every one of them was a bordered
+// transparent pill, so "Disconnect file" carried exactly as much visual weight
+// as "Refresh" and as a filter chip. That sameness is what made it read as
+// clutter rather than as a toolbar. These three levels say how often a control
+// is wanted and how much it costs to press.
+
+/** Level 2 - frequent, but not the point of the page. Refresh, Reconnect. */
 export const RIBBON_BTN =
   'inline-flex items-center gap-1 rounded-md border border-neutral-300 px-2 py-1 text-xs font-medium text-neutral-700 transition hover:bg-neutral-100 disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800';
+
+/** Level 1 - the one control here that creates something. */
+export const RIBBON_BTN_PRIMARY =
+  'inline-flex items-center gap-1 rounded-md bg-neutral-900 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300';
+
+/** Level 3 - rare, or destructive, or merely informational. Borderless. */
+export const RIBBON_BTN_GHOST =
+  'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-200/70 disabled:opacity-50 dark:text-neutral-300 dark:hover:bg-neutral-800';
+
+// ---- Segmented control ----------------------------------------------------
+//
+// The four KPI filters are mutually exclusive - exactly one is ever active.
+// Four separate bordered pills say "four independent toggles", which is a lie
+// about how they behave, and it is why they were indistinguishable from the
+// closed/filtered toggles sitting next to them. A segmented control says
+// "pick one".
+
+export const SEG_WRAP =
+  'inline-flex items-center gap-0.5 rounded-lg border border-neutral-300 bg-neutral-100 p-0.5 dark:border-neutral-700 dark:bg-neutral-800';
+export const SEG_ITEM =
+  'flex items-baseline gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition';
+export const SEG_ON =
+  'bg-white text-neutral-900 shadow-sm dark:bg-neutral-950 dark:text-neutral-100';
+export const SEG_OFF =
+  'text-neutral-600 hover:bg-white/70 dark:text-neutral-300 dark:hover:bg-neutral-950/60';
+
+/**
+ * A genuinely independent on/off - the closed and filtered-mail lanes.
+ *
+ * Deliberately shaped unlike SEG_*: these two are not part of the pick-one
+ * group, and rendering them the same way was most of the confusion.
+ */
+export const TOGGLE =
+  'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition';
+export const TOGGLE_ON =
+  'bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-neutral-100';
+export const TOGGLE_OFF =
+  'text-neutral-600 hover:bg-neutral-200/70 dark:text-neutral-300 dark:hover:bg-neutral-800';
 
 /** A populated swim lane. Width is fixed so lanes stay scannable while scrolling. */
 export const LANE =

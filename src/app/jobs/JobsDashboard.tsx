@@ -402,8 +402,11 @@ function GatedShell({
           {theme === 'dark' ? 'Light' : 'Dark'}
         </button>
       </div>
-      <main className="min-h-0 flex-1 overflow-auto px-4 py-6">
-        <div className="mx-auto max-w-2xl">{children}</div>
+      {/* Centred, and narrower than the board's shell: this is an entry
+          screen, and content pinned to the top-left of a 1440px window reads
+          as a page that failed to load rather than as a place to start. */}
+      <main className="flex min-h-0 flex-1 items-center justify-center overflow-auto px-4 py-8">
+        <div className="w-full max-w-lg">{children}</div>
       </main>
     </>
   );
